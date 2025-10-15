@@ -1,8 +1,10 @@
 import express from 'express';
-import user from './routes/userRoutes.js';
+import users from './routes/usersRoutes.js';
+import commentaries from './routes/commentariesRoutes.js';
 
 const router = express.Router();
 
-router.use('/users', user);
+router.use('/users', users);
+router.use('/commentaries', commentaries);
 
 export default router;
