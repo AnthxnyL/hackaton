@@ -23,18 +23,6 @@ export const getUsers = async (req, res) => {
     }
 };
 
-export const getUsers = async(req, res) => {
-  try{
-    const users = await usersModel.find();
-    if(!users) {
-      return res.status(404).json({ message: 'User not found'})
-    }
-    res.json(users)
-  }catch(error){
-    console.log(error)
-  }
-}
-
 export const createUser = async (req, res) => {
     const { email, firstname, lastname, password, address, description, phoneNumber, avatar } = req.body;
     try {
