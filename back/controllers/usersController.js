@@ -54,7 +54,7 @@ export const updateUser = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
-};
+}
 
 export const deleteUser = async (req, res) => {
     const checkAdmin = await isAdmin(req.params._id)
