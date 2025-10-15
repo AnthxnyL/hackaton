@@ -42,7 +42,7 @@ export const updateUser = async (req, res) => {
     }
     try {
         const updateUser = await usersModel.findByIdAndUpdate(
-            req.params.id,
+            req.params._id,
             { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
         );
@@ -57,11 +57,12 @@ export const updateUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden' });
+    const checkAdmin = await isAdmin(req.params._id)
+    if (checkAdmin) {
+      return res.status(403).json({ message: 'Forbidden' });
     }
     try {
-        const deleteUser = await usersModel.findByIdAndDelete(req.params.id);
+        const deleteUser = await usersModel.findByIdAndDelete(req.params._id);
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -71,3 +72,16 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
+export const isAdmin = async (id) => {
+  try {
+    const user = await usersModel.findById(id);
+    if(user.role === 'admin') {
+      return true;
+    }
+    return false;
+  } catch(error){
+    console.error(error);
+  }
+}
