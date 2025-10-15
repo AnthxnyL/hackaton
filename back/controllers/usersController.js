@@ -26,11 +26,14 @@ export const createUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-    const { email, firstname, lastname, password, address, description, phoneNumber, avatar } = req.body;
+    const { email, firstname, lastname, password, role, address, description, phoneNumber, avatar } = req.body;
+    if (role && !['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role' });
+    }
     try {
         const updateUser = await usersModel.findByIdAndUpdate(
             req.params.id,
-            { email, firstname, lastname, password, address, description, phoneNumber, avatar },
+            { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
         );
         if (!updateUser) {
@@ -44,6 +47,9 @@ export const updateUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
     try {
         const deleteUser = await usersModel.findByIdAndDelete(req.params.id);
         if (!deleteUser) {
