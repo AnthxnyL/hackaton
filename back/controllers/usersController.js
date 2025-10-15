@@ -11,6 +11,16 @@ export const getUser = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
+}
+
+export const getUsers = async (req, res) => {
+    try {
+        const users = await usersModel.find();
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
 export const createUser = async (req, res) => {
