@@ -11,6 +11,13 @@ const userSchema = new mongoose.Schema({
     description: String,
     phoneNumber: String,
     createdAt: { type: Date, default: Date.now },
+    tokens: [
+        {
+            hash: String,
+            createdAt: Date,
+            expiresAt: Date
+        }
+    ],
 });
 
 const User = mongoose.model('User', userSchema);
