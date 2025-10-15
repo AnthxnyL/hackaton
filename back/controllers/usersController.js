@@ -2,7 +2,7 @@ import Users from '../models/usersModel.js';
 
 export const getUser = async (req, res) => {
   try {
-    const user = await usersModel.findById(req.params._id);
+    const user = await Users.findById(req.params._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -41,7 +41,7 @@ export const updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role' });
     }
     try {
-        const updateUser = await usersModel.findByIdAndUpdate(
+        const updateUser = await Users.findByIdAndUpdate(
             req.params._id,
             { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
@@ -62,7 +62,7 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
     try {
-        const deleteUser = await usersModel.findByIdAndDelete(req.params._id);
+        const deleteUser = await Users.findByIdAndDelete(req.params._id);
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -76,7 +76,7 @@ export const deleteUser = async (req, res) => {
 
 export const isAdmin = async (id) => {
   try {
-    const user = await usersModel.findById(id);
+    const user = await Users.findById(id);
     if(user.role === 'admin') {
       return true;
     }

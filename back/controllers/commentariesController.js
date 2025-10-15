@@ -16,7 +16,7 @@ export const getCommentary = async (req, res) => {
 
 export const getCommentaries = async (req, res) => {
     try {
-        const commentaries = await Commentaries.find().populate('user', 'firstname lastname email');
+        const commentaries = await Commentaries.find().populate('userId', 'firstname lastname email');
         res.json(commentaries);
     } catch (error) {
         console.error(error);
@@ -31,7 +31,7 @@ export const createCommentary = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: 'Invalid user ID' });
         }
-        const newCommentary = new Commentaries({ description, user: userId });
+        const newCommentary = new Commentaries({ description, user: user });
         await newCommentary.save();
         res.status(201).json(newCommentary);
     } catch (error) {
