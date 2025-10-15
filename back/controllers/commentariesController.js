@@ -1,4 +1,4 @@
-import Commentaries from "../models/commentaries";
+import Commentaries from "../models/commentariesModel.js";
 import Users from '../models/usersModel.js';
 
 export const getCommentary = async (req, res) => {
