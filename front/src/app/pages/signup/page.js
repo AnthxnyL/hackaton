@@ -16,7 +16,6 @@ export default function SignInPage() {
                   name="firstname"
                   placeholder="Prénom"
                   className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                  required
                 />
               </div>
               <div>
@@ -25,7 +24,6 @@ export default function SignInPage() {
                   name="lastname"
                   placeholder="Nom"
                   className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                  required
                 />
               </div>
             </div>
@@ -72,15 +70,6 @@ export default function SignInPage() {
                 type="text"
                 name="description"
                 placeholder="Description"
-                className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                required
-              />
-            </div>
-            <div>
-              <input
-                type="text"
-                name="pseudo"
-                placeholder="Pseudo"
                 className="w-full px-3 py-2 border rounded-2xl text-pink-400"
                 required
               />
