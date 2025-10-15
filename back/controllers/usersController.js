@@ -1,8 +1,8 @@
-import usersModel from '../models/usersModel.js'; 
+import Users from '../models/usersModel.js'; 
 
 export const getUser = async (req, res) => {
   try {
-    const user = await usersModel.findById(req.params.id);
+    const user = await Users.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -15,7 +15,7 @@ export const getUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await usersModel.find();
+        const users = await Users.find();
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -26,7 +26,7 @@ export const getUsers = async (req, res) => {
 export const createUser = async (req, res) => {
     const { email, firstname, lastname, password, address, description, phoneNumber, avatar } = req.body;
     try {
-        const newUser = new usersModel({ email, firstname, lastname, password, address, description, phoneNumber, avatar });
+        const newUser = new Users({ email, firstname, lastname, password, address, description, phoneNumber, avatar });
         await newUser.save();
         res.status(201).json(newUser);
     } catch (error) {
@@ -41,7 +41,7 @@ export const updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role' });
     }
     try {
-        const updateUser = await usersModel.findByIdAndUpdate(
+        const updateUser = await Users.findByIdAndUpdate(
             req.params.id,
             { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
@@ -61,7 +61,7 @@ export const deleteUser = async (req, res) => {
         return res.status(403).json({ message: 'Forbidden' });
     }
     try {
-        const deleteUser = await usersModel.findByIdAndDelete(req.params.id);
+        const deleteUser = await Users.findByIdAndDelete(req.params.id);
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
