@@ -15,7 +15,7 @@ export default function SignInPage() {
     };
     console.log("Submitting sign-in with payload:", payload);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
       const res = await fetch(`${apiBase}/auth/signin`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
@@ -36,6 +36,18 @@ export default function SignInPage() {
         form.reset();
         alert("Connexion réussie.");
         console.log("Sign-in successful:", data);
+        try {
+          if (data && data.token) {
+        localStorage.setItem('token', data.token);
+          }
+        } catch (e) {
+          console.warn('Could not access localStorage to save token', e);
+        }
+        try {
+          window.location.replace('/pages/profile/' + data.user._id);
+        } catch (e) {
+          console.error('Redirect to /profile failed', e);
+        }
       } else {
         console.error("Sign-in failed:", data);
         alert(data?.message || "Erreur lors de la connexion.");

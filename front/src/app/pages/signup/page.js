@@ -21,7 +21,7 @@ export default function SignUpPage() {
     };
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
       const res = await fetch(`${apiBase}/users`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
@@ -42,6 +42,18 @@ export default function SignUpPage() {
       if (res.ok) {
         form.reset();
         alert("Compte créé avec succès.");
+        try {
+          if (data && data.token) {
+            localStorage.setItem('token', data.token);
+          }
+        } catch (e) {
+          console.warn('Could not access localStorage to save token', e);
+        }
+        try {
+          window.location.replace('/pages/profile/' + data.user._id);
+        } catch (e) {
+          console.error('Redirect to /profile failed', e);
+        }
       } else {
         console.error("Sign-up failed:", data);
         alert(data?.message || "Erreur lors de la création du compte.");

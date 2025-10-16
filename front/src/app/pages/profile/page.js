@@ -13,7 +13,11 @@ export default function ProfileList() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${id}`)
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch(`${apiBase}/users`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setUsers(data)

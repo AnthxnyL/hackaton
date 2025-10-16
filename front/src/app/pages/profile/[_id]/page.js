@@ -18,8 +18,11 @@ export default function ProfilePage() {
       setLoading(true);
       setError(null);
       try {
-        // utilise l'API déployée fournie
-        const res = await fetch(`https://hackaton-back-delta.vercel.app/users/${id}`);
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch(`${apiBase}/users/${id}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
