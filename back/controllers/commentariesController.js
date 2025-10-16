@@ -25,13 +25,16 @@ export const getCommentaries = async (req, res) => {
 };
 
 export const createCommentary = async (req, res) => {
-    const { description, userId, parentId } = req.body;
+     const { description, parentId } = req.body;
     try {
-        const user = await Users.findById(userId);
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid user ID' });
-        }
-        const newCommentary = new Commentaries({ description, user: user, parentId });
+        const user = req.user;
+        
+        const newCommentary = new Commentaries({ 
+            description, 
+            userId: user._id, 
+            parentId 
+        });
+        
         await newCommentary.save();
         res.status(201).json(newCommentary);
     } catch (error) {
