@@ -1,8 +1,9 @@
-import Users from '../models/usersModel.js'; 
+import User from '../models/usersModel.js';
+import bcrypt from 'bcrypt';
 
 export const getUser = async (req, res) => {
   try {
-    const user = await usersModel.findById(req.params._id);
+    const user = await User.findById(req.params._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -15,7 +16,7 @@ export const getUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await Users.find();
+        const users = await User.find();
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -24,15 +25,30 @@ export const getUsers = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-    const { email, firstname, lastname, password, address, description, phoneNumber, avatar } = req.body;
-    try {
-        const newUser = new Users({ email, firstname, lastname, password, address, description, phoneNumber, avatar });
-        await newUser.save();
-        res.status(201).json(newUser);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+  const { email, firstname, lastname, password, address, description, phoneNumber, avatar } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
+  try {
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ message: 'Email already in use' });
     }
+
+    const saltRounds = 10;
+    const hashed = await bcrypt.hash(password, saltRounds);
+
+    const newUser = new User({ email, firstname, lastname, password: hashed, address, description, phoneNumber, avatar });
+    await newUser.save();
+
+    const { password: _pw, ...userSafe } = newUser.toObject();
+    res.status(201).json({ success: true, user: userSafe });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
 };
 
 export const updateUser = async (req, res) => {
@@ -41,7 +57,7 @@ export const updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role' });
     }
     try {
-        const updateUser = await usersModel.findByIdAndUpdate(
+        const updateUser = await User.findByIdAndUpdate(
             req.params._id,
             { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
@@ -62,7 +78,7 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
     try {
-        const deleteUser = await usersModel.findByIdAndDelete(req.params._id);
+        const deleteUser = await User.findByIdAndDelete(req.params._id);
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -76,12 +92,13 @@ export const deleteUser = async (req, res) => {
 
 export const isAdmin = async (id) => {
   try {
-    const user = await usersModel.findById(id);
-    if(user.role === 'admin') {
+    const user = await User.findById(id);
+    if (user && user.role === 'admin') {
       return true;
     }
     return false;
   } catch(error){
     console.error(error);
+    return false;
   }
 }
