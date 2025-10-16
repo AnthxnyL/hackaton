@@ -13,8 +13,7 @@ export default function CommentariesPage() {
       setLoading(true)
       setError(null)
       try {
-
-        const res = await fetch(`https://hackaton-back-delta.vercel.app/commentaries`)
+        const res = await fetch(`https://hackaton-back-delta.vercel.app/commentaries`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setCommentaries(data)
