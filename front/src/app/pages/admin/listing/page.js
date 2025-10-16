@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 
 function SmallStat({ label, value, hint }) {
@@ -8,57 +9,6 @@ function SmallStat({ label, value, hint }) {
             <div className="text-2xl font-bold text-pink-600">{value}</div>
             {hint && <div className="text-xs text-pink-500 mt-1">{hint}</div>}
         </div>
-    );
-}
-
-// Mock data generator
-const MOCK_DATA = {
-    users: [
-        { _id: '1', firstname: 'Sophie', lastname: 'Martin', email: 'sophie.martin@example.com', address: '15 rue de Paris, Lyon' },
-        { _id: '2', firstname: 'Lucas', lastname: 'Bernard', email: 'lucas.bernard@example.com', address: '23 avenue Victor Hugo, Marseille' },
-        { _id: '3', firstname: 'Emma', lastname: 'Dubois', email: 'emma.dubois@example.com', address: '8 boulevard Saint-Michel, Paris' },
-        { _id: '4', firstname: 'Thomas', lastname: 'Robert', email: 'thomas.robert@example.com', address: '42 rue de la République, Toulouse' },
-        { _id: '5', firstname: 'Chloé', lastname: 'Petit', email: 'chloe.petit@example.com', address: '5 place Bellecour, Lyon' },
-        { _id: '6', firstname: 'Hugo', lastname: 'Durand', email: 'hugo.durand@example.com', address: '' },
-        { _id: '7', firstname: 'Léa', lastname: 'Leroy', email: 'lea.leroy@example.com', address: '18 cours Lafayette, Lyon' },
-        { _id: '8', firstname: 'Alex', lastname: 'Moreau', email: 'alex.moreau@example.com', address: '31 rue Nationale, Lille' },
-    ],
-    adminStats: {
-        totalUsers: 127,
-        addresses: 98,
-        usersThisMonth: 23,
-        totalComments: 456,
-        commentsPerDay: [
-            { _id: '2024-01-15', count: 12 },
-            { _id: '2024-01-16', count: 18 },
-            { _id: '2024-01-17', count: 8 },
-            { _id: '2024-01-18', count: 25 },
-            { _id: '2024-01-19', count: 15 },
-            { _id: '2024-01-20', count: 22 },
-            { _id: '2024-01-21', count: 19 },
-        ]
-    }
-};
-
-function BarChart({ items = [], width = 300, height = 80 }) {
-    if (!items.length) return <div className="text-sm text-pink-500">Aucun commentaire récent</div>;
-    const max = Math.max(...items.map((i) => i.count), 1);
-    const step = width / items.length;
-    return (
-        <svg width={width} height={height}>
-            {items.map((it, idx) => {
-                const w = step * 0.7;
-                const x = idx * step + (step - w) / 2;
-                const h = (it.count / max) * (height - 20);
-                const y = height - h - 10;
-                return (
-                    <g key={it._id || idx}>
-                        <rect x={x} y={y} width={w} height={h} rx="3" fill="#F472B6" />
-                        <text x={x + w / 2} y={height - 2} fontSize="10" textAnchor="middle" fill="#6b2135">{it._id?.slice(5) || ''}</text>
-                    </g>
-                );
-            })}
-        </svg>
     );
 }
 
@@ -90,6 +40,29 @@ function PieChart({ parts, size = 140 }) {
 }
 
 
+function BarChart({ items = [], width = 300, height = 80 }) {
+    if (!items.length) return <div className="text-sm text-pink-500">Aucun commentaire récent</div>;
+    const max = Math.max(...items.map((i) => i.count), 1);
+    const step = width / items.length;
+    return (
+        <svg width={width} height={height}>
+            {items.map((it, idx) => {
+                const w = step * 0.7;
+                const x = idx * step + (step - w) / 2;
+                const h = (it.count / max) * (height - 20);
+                const y = height - h - 10;
+                return (
+                    <g key={it._id || idx}>
+                        <rect x={x} y={y} width={w} height={h} rx="3" fill="#F472B6" />
+                        <text x={x + w / 2} y={height - 2} fontSize="10" textAnchor="middle" fill="#6b2135">{it._id?.slice(5) || ''}</text>
+                    </g>
+                );
+            })}
+        </svg>
+    );
+}
+
+
 export default function Listing() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -102,18 +75,11 @@ export default function Listing() {
             setError(null);
             try {
                 const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
-            
+
 
                 // Prepare auth header if token available (admin routes are protected)
                 const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-                // Fetch users (for list and gender distribution)
-                const usersP = fetch(`${apiBase}/users`, { headers }).then(async (r) => {
-                    if (!r.ok) throw new Error(`users: HTTP ${r.status}`);
-                    const data = await r.json();
-                    return Array.isArray(data) ? data : (data.users || []);
-                }).catch(() => MOCK_DATA.users || []);
 
                 // Fetch admin numbers (may be protected; fall back if not available)
                 const totalP = fetch(`${apiBase}/admin/numbers`, { headers }).then(async (r) => {
@@ -168,11 +134,15 @@ export default function Listing() {
         const total = adminStats.totalUsers ?? users.length;
         let addressesCount = 0;
         users.forEach((u) => {
+            const g = (u.gender || u.sex || u.sGenre || '').toString().toLowerCase();
+            if (g.includes('f')) genders.female++;
+            else if (g.includes('m')) genders.male++;
+            else genders.other++;
             if (u.address) addressesCount++;
         });
         // fallback to admin addresses if computed is 0
         const addresses = adminStats.addresses ?? addressesCount;
-        return { total, addresses, usersThisMonth: adminStats.usersThisMonth, totalComments: adminStats.totalComments };
+        return { total, genders, addresses, usersThisMonth: adminStats.usersThisMonth, totalComments: adminStats.totalComments };
     }, [users, adminStats]);
 
 
@@ -191,19 +161,18 @@ export default function Listing() {
             </div>
 
             <div className="flex gap-6 items-start">
-                <div className="bg-white bg-opacity-60 p-6 rounded-2xl" style={{width: 420}}>
-                    <h2 className="font-semibold text-pink-600 mb-4">Activité</h2>
-                    <div>
-                        <h3 className="text-sm font-medium text-pink-600 mb-2">Commentaires (7 derniers jours)</h3>
-                        {adminStats.commentsPerDay ? (
-                            <BarChart items={adminStats.commentsPerDay} width={380} height={100} />
-                        ) : (
-                            <div className="text-sm text-pink-500">Données d'activité indisponibles</div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                            <SmallStat label="Nouveaux ce mois" value={stats.usersThisMonth ?? 0} />
-                            <SmallStat label="Commentaires totaux" value={stats.totalComments ?? 0} />
+                <div className="bg-white bg-opacity-60 p-6 rounded-2xl">
+                    <h2 className="font-semibold text-pink-600 mb-4">Répartition par genre</h2>
+                    <div className="flex items-center gap-6">
+                        <PieChart parts={[
+                            { value: stats.genders.male, color: '#60A5FA' },
+                            { value: stats.genders.female, color: '#F472B6' },
+                            { value: stats.genders.other, color: '#FBBF24' },
+                        ]} />
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#60A5FA] inline-block rounded-full"/> Homme: {stats.genders.male}</div>
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#F472B6] inline-block rounded-full"/> Femme: {stats.genders.female}</div>
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#FBBF24] inline-block rounded-full"/> Autre: {stats.genders.other}</div>
                         </div>
                     </div>
                 </div>

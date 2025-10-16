@@ -41,7 +41,7 @@ export default function ProfileList() {
       <ul>
         {users.map(user => (
           <li key={user._id} style={{marginBottom:12}}>
-            <Link href={`/profile/${user._id}`} style={{textDecoration:'none',color:'#0366d6'}}>
+            <Link href={`/pages/profile/${user._id}`} style={{textDecoration:'none',color:'#0366d6'}}>
               {user.firstname} {user.lastname} {user.email && `- ${user.email}`}
             </Link>
           </li>
