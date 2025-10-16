@@ -1,74 +1,109 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from "react";
-import Link from 'next/link'
+import Link from "next/link";
 
 export default function CommentariesPage() {
-  const [commentaries, setCommentaries] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [replyText, setReplyText] = useState({})
-  const [replyLoading, setReplyLoading] = useState({})
-  const [replyError, setReplyError] = useState({})
+  const [commentaries, setCommentaries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [replyText, setReplyText] = useState({});
+  const [replyLoading, setReplyLoading] = useState({});
+  const [replyError, setReplyError] = useState({});
 
   useEffect(() => {
     const fetchCommentaries = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
-        const res = await fetch(`${apiBase}/commentaries`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        setCommentaries(data)
+        // const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+        // const res = await fetch(`${apiBase}/commentaries`)
+        const res = await fetch(
+          `https://hackaton-back-delta.vercel.app/commentaries`
+        );
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setCommentaries(data);
       } catch (err) {
-        setError(err.message || 'Erreur lors de la récupération')
+        setError(err.message || "Erreur lors de la récupération");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchCommentaries()
-  }, [])
+    fetchCommentaries();
+  }, []);
 
-  if (loading) return (
-    <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
-      <div className="font-bold mb-4 text-pink-600">Chargement des commentaires...</div>
-    </div>
-)
-  if (error) return <div>Erreur: {error}</div>
+  if (loading)
+    return (
+      <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
+        <div className="font-bold mb-4 text-pink-600">
+          Chargement des commentaires...
+        </div>
+      </div>
+    );
+  if (error) return <div>Erreur: {error}</div>;
 
   return (
     <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
       <h1 className="text-3xl font-bold mb-4 text-pink-600">Commentaires</h1>
       <div className="space-y-4 p-10">
-        {commentaries.map(c => (
+        {commentaries.map((c) => (
           <div key={c._id} className="bg-pink-300/50 rounded p-4">
             <div className="flex items-center gap-3">
               {c.userId && c.userId.avatar ? (
-                <img src={c.userId.avatar} alt="Avatar" className="w-12 h-12 rounded-full" />
+                <img
+                  src={c.userId.avatar}
+                  alt="Avatar"
+                  className="w-12 h-12 rounded-full"
+                />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-pink-200" />
               )}
               <div>
                 <h2 className="text-2xl font-bold text-pink-900">
-                  {c.userId ? `${c.userId.firstname} ${c.userId.lastname}` : 'Utilisateur supprimé'}
+                  {c.userId
+                    ? `${c.userId.firstname} ${c.userId.lastname}`
+                    : "Utilisateur supprimé"}
                 </h2>
-                <p className="text-xs text-pink-800">{new Date(c.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-pink-800">
+                  {new Date(c.createdAt).toLocaleString()}
+                </p>
               </div>
             </div>
             <p className="text-pink-600 text-lg mt-3">{c.description}</p>
             <div className="mt-3 flex items-center gap-4">
               {c.userId && (
-                <Link href={`/profile/${c.userId._id}`} className="text-pink-900 text-sm italic">Voir profil</Link>
+                <Link
+                  href={`/profile/${c.userId._id}`}
+                  className="text-pink-900 text-sm italic"
+                >
+                  Voir profil
+                </Link>
               )}
-              <button onClick={() => setReplyText(prev => ({ ...prev, [c._id]: prev[c._id] ? '' : '' }))} className="text-pink-900 text-xs italic">Répondre</button>
+              <button
+                onClick={() =>
+                  setReplyText((prev) => ({
+                    ...prev,
+                    [c._id]: prev[c._id] ? "" : "",
+                  }))
+                }
+                className="text-pink-900 text-xs italic"
+              >
+                Répondre
+              </button>
             </div>
             {replyText[c._id] !== undefined && (
               <div className="mt-3">
                 <textarea
-                  value={replyText[c._id] || ''}
-                  onChange={e => setReplyText(prev => ({ ...prev, [c._id]: e.target.value }))}
+                  value={replyText[c._id] || ""}
+                  onChange={(e) =>
+                    setReplyText((prev) => ({
+                      ...prev,
+                      [c._id]: e.target.value,
+                    }))
+                  }
                   className="w-full p-2 rounded border"
                   placeholder="Écrire une réponse..."
                 />
@@ -76,42 +111,74 @@ export default function CommentariesPage() {
                   <button
                     disabled={replyLoading[c._id]}
                     onClick={async () => {
-                      const text = (replyText[c._id] || '').trim()
-                      if (!text) return setReplyError(prev => ({ ...prev, [c._id]: 'Le message est vide' }))
-                      setReplyLoading(prev => ({ ...prev, [c._id]: true }))
-                      setReplyError(prev => ({ ...prev, [c._id]: null }))
+                      const text = (replyText[c._id] || "").trim();
+                      if (!text)
+                        return setReplyError((prev) => ({
+                          ...prev,
+                          [c._id]: "Le message est vide",
+                        }));
+                      setReplyLoading((prev) => ({ ...prev, [c._id]: true }));
+                      setReplyError((prev) => ({ ...prev, [c._id]: null }));
                       try {
-                        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
-                        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+                        const apiBase = (
+                          process.env.NEXT_PUBLIC_API_URL ||
+                          "https://hackaton-back-delta.vercel.app"
+                        ).replace(/\/+$/, "");
+                        const token =
+                          typeof window !== "undefined"
+                            ? localStorage.getItem("token")
+                            : null;
                         const res = await fetch(`${apiBase}/commentaries`, {
-                          method: 'POST',
+                          method: "POST",
                           headers: {
-                            'Content-Type': 'application/json',
-                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                            "Content-Type": "application/json",
+                            ...(token
+                              ? { Authorization: `Bearer ${token}` }
+                              : {}),
                           },
-                          body: JSON.stringify({ description: text, parentId: c._id }),
-                        })
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-                        setReplyText(prev => ({ ...prev, [c._id]: '' }))
-                        await fetchCommentaries()
+                          body: JSON.stringify({
+                            description: text,
+                            parentId: c._id,
+                          }),
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        setReplyText((prev) => ({ ...prev, [c._id]: "" }));
+                        await fetchCommentaries();
                       } catch (err) {
-                        setReplyError(prev => ({ ...prev, [c._id]: err.message || 'Erreur lors de l envoi' }))
+                        setReplyError((prev) => ({
+                          ...prev,
+                          [c._id]: err.message || "Erreur lors de l envoi",
+                        }));
                       } finally {
-                        setReplyLoading(prev => ({ ...prev, [c._id]: false }))
+                        setReplyLoading((prev) => ({
+                          ...prev,
+                          [c._id]: false,
+                        }));
                       }
                     }}
                     className="bg-pink-600 text-white px-4 py-2 rounded"
                   >
-                    {replyLoading[c._id] ? 'Envoi...' : 'Envoyer'}
+                    {replyLoading[c._id] ? "Envoi..." : "Envoyer"}
                   </button>
-                  <button onClick={() => setReplyText(prev => ({ ...prev, [c._id]: undefined }))} className="px-4 py-2 rounded border">Annuler</button>
+                  <button
+                    onClick={() =>
+                      setReplyText((prev) => ({ ...prev, [c._id]: undefined }))
+                    }
+                    className="px-4 py-2 rounded border"
+                  >
+                    Annuler
+                  </button>
                 </div>
-                {replyError[c._id] && <div className="text-red-600 text-sm mt-1">{replyError[c._id]}</div>}
+                {replyError[c._id] && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {replyError[c._id]}
+                  </div>
+                )}
               </div>
             )}
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
