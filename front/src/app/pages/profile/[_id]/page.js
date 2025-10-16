@@ -39,7 +39,11 @@ export default function ProfilePage() {
   }, [id]);
 
   if (!id) return <div>Identifiant manquant dans l'URL</div>
-  if (loading) return <div>Chargement...</div>
+  if (loading) return (
+  <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
+      <div className="font-bold mb-4 text-pink-600">Chargement...</div>
+    </div>
+)
   if (error) return <div>Erreur: {error}</div>
   if (!user) return <div>Aucun utilisateur trouvé</div>
 
