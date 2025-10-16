@@ -48,45 +48,73 @@ export default function ProfilePage() {
   if (!user) return <div>Aucun utilisateur trouvé</div>
 
   return (
-    <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
-      <div>
-        <h1 className="text-2xl font-semibold mb-4 text-pink-600">Mon profil</h1>
-        <p className="text-pink-400 italic">Voir toutes les informations de profil ici</p>
-      </div>
-      <div className="flex gap-4 bg-pink-700 p-8 rounded-3xl mt-4 justify-center">
-        <div className="relative z-10 text-center bg-white bg-opacity-50 p-8 rounded-3xl">
-          <h1 className="text-2xl font-semibold mb-4 text-pink-600">{user.firstname} {user.lastname}</h1>
+    <div className="min-h-screen flex items-start justify-center bg-pink-100 p-6 sm:p-10 w-full">
+      <div className="w-full max-w-5xl">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-pink-600">Mon profil</h1>
+            <p className="mt-1 text-pink-400 italic">Voir toutes les informations de profil ici</p>
+          </div>
+          <div className="mt-2 sm:mt-0 text-sm text-pink-800/60">ID: <span className="font-medium text-pink-600">{user._id || id}</span></div>
+        </header>
 
-          {user.avatar ? (
-            <img src={user.avatar} alt="Avatar" className="w-32 h-32 rounded-full mx-auto" />
-          ) : (
-            <div className="w-32 h-32 rounded-full mx-auto bg-pink-200 flex items-center justify-center">No avatar</div>
-          )}
-        </div>
-        <div className="relative z-10 text-center bg-white bg-opacity-50 p-8 rounded-3xl">
-          <h1 className="text-2xl font-semibold mb-4 text-pink-600">Informations et autres détails</h1>
+        <main className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Profile card */}
+          <section className="col-span-1 flex flex-col items-center md:items-start gap-4 p-6 rounded-2xl bg-white/40 backdrop-blur-md border border-pink-200/40 shadow-lg">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={`${user.firstname} ${user.lastname}`}
+                className="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover object-center border-4 border-white shadow-sm"
+              />
+            ) : (
+              <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center text-white text-2xl font-semibold border-4 border-white shadow-sm">
+                {(user.firstname?.[0] || 'U') + (user.lastname?.[0] || '')}
+              </div>
+            )}
 
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Rôle</p>
-            <p className="text-pink-600">{user.role || '—'}</p>
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Ma Description</p>
-            <p className="text-pink-600">{user.description || '—'}</p>
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Email</p>
-            <p className="text-pink-600">{user.email}</p>
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Adresse</p>
-            <p className="text-pink-600">{user.address || '—'}</p>
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Téléphone</p>
-            <p className="text-pink-600">{user.phoneNumber || '—'}</p>
-          </div>
-        </div>
+            <div className="text-center md:text-left">
+              <h2 className="text-xl font-semibold text-pink-600">{user.firstname} {user.lastname}</h2>
+              <p className="text-sm text-pink-800/60 mt-1">{user.role || '—'}</p>
+            </div>
+          </section>
+
+          <section className="col-span-2 p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
+            <h3 className="text-lg font-semibold text-pink-600 mb-4">Informations et autres détails</h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Description</p>
+                <p className="mt-1 text-pink-600">{user.description || '—'}</p>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Adresse</p>
+                <p className="mt-1 text-pink-600">{user.address || '—'}</p>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Email</p>
+                <p className="mt-1 text-pink-600 break-all">{user.email}</p>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Téléphone</p>
+                <p className="mt-1 text-pink-600">{user.phoneNumber || '—'}</p>
+              </div>
+
+              <div className="sm:col-span-2 p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Rôle détaillé</p>
+                <p className="mt-1 text-pink-600">{user.roleDescription || user.role || '—'}</p>
+              </div>
+
+              <div className="sm:col-span-2 p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                <p className="text-xs text-pink-800/60">Autres informations</p>
+                <p className="mt-1 text-pink-600">{user.otherInfo || '—'}</p>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );
