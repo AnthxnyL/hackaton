@@ -14,7 +14,8 @@ export default function CommentariesPage() {
       setError(null)
       try {
 
-        const res = await fetch(`https://hackaton-back-delta.vercel.app/commentaries`)
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+        const res = await fetch(`${apiBase}/commentaries`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setCommentaries(data)
