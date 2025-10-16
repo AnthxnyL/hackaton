@@ -3,7 +3,11 @@ import { getUser, getUsers, createUser, updateUser, deleteUser } from '../contro
 
 const router = express.Router();
 
+<<<<<<< HEAD
 router.get('/:_id', getUser);
+=======
+router.get('/:_id', getUser)
+>>>>>>> hashed-password
 router.get('/', getUsers);
 router.post('/', createUser);
 router.put('/:_id', updateUser);
