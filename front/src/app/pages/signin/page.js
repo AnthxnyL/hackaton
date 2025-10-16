@@ -12,8 +12,8 @@ export default function SignInPage() {
             <div>
               <input
                 type="text"
-                name="pseudo"
-                placeholder="Pseudo"
+                name="email"
+                placeholder="Email"
                 className="w-full px-3 py-2 border rounded-2xl text-pink-400"
                 required
               />
