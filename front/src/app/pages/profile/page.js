@@ -1,69 +1,48 @@
-"use client";
+ 'use client'
 
-import React from "react";
-import { useState, useEffect } from "react";
-import { User } from "../../../models/usersModel";
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
-export default function ProfilePage() {
-const [user, setUser] = useState(null);
+export default function ProfileList() {
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-    useEffect(() => {
-        // Fetch user data from API or context
-        const fetchUser = async () => {
-            const response = await User.findById(userId);
-            setUser(response);
-        };
-        fetchUser();
-    }, []);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${id}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setUsers(data)
+      } catch (err) {
+        setError(err.message || 'Erreur lors de la récupération')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [])
+
+  if (loading) return <div>Chargement des utilisateurs...</div>
+  if (error) return <div>Erreur: {error}</div>
 
   return (
-    <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
-      <div>
-        <h1 className="text-2xl font-semibold mb-4 text-pink-600">
-          Mon profil
-        </h1>
-        <p className="text-pink-400 italic">
-          Voir toutes les informations de profil ici
-        </p>
-      </div>
-      <div className="flex gap-4 bg-pink-700 p-8 rounded-3xl mt-4 justify-center">
-        <div className="relative z-10 text-center bg-white bg-opacity-50 p-8 rounded-3xl">
-          <h1 className="text-2xl font-semibold mb-4 text-pink-600">Name</h1>
-          {/* <h1 className="text-2xl font-semibold mb-4 text-pink-600">{user.firstname}{user.lastname}</h1> */}
-
-          <img
-            src="profile.jpg"
-            alt="Profile Picture"
-            className="w-32 h-32 rounded-full mx-auto"
-          />
-          {/* user.avatar */}
-        </div>
-        <div className="relative z-10 text-center bg-white bg-opacity-50 p-8 rounded-3xl">
-          <h1 className="text-2xl font-semibold mb-4 text-pink-600">
-            Informations et autres détails
-          </h1>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Rôle</p>
-            <p className="text-pink-600">rôle</p>
-            {/* <p className="text-pink-600">{User.role}</p> */}
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Ma Description</p>
-            <p className="text-pink-600">Ceci est une description.</p>
-            {/* <p className="text-pink-600">{User.description}</p> */}
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Email</p>
-            <p className="text-pink-600">email@example.com</p>
-            {/* <p className="text-pink-600">{User.email}</p> */}
-          </div>
-          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
-            <p className="text-pink-800/60">Mon Adresse</p>
-            <p className="text-pink-600">Adresse</p>
-            {/* <p className="text-pink-600">{User.address}</p> */}
-          </div>
-        </div>
-      </div>
+    <div>
+      <h1>Liste des utilisateurs</h1>
+      {users.length === 0 && <p>Aucun utilisateur trouvé.</p>}
+      <ul>
+        {users.map(user => (
+          <li key={user._id} style={{marginBottom:12}}>
+            <Link href={`/profile/${user._id}`} style={{textDecoration:'none',color:'#0366d6'}}>
+              {user.firstname} {user.lastname} {user.email && `- ${user.email}`}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
-  );
+  )
 }
