@@ -2,18 +2,66 @@
 import React from "react";
 
 export default function SignUpPage() {
+  const arrayBufferToBase64 = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
+  const hashPassword = async (password) => {
+    const enc = new TextEncoder();
+    const salt = (window.crypto || globalThis.crypto).getRandomValues(new Uint8Array(16));
+    const keyMaterial = await (window.crypto || globalThis.crypto).subtle.importKey(
+      "raw",
+      enc.encode(password),
+      { name: "PBKDF2" },
+      false,
+      ["deriveBits"]
+    );
+
+    const derivedBits = await (window.crypto || globalThis.crypto).subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations: 150000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      256
+    );
+
+    return {
+      hash: arrayBufferToBase64(derivedBits),
+      salt: arrayBufferToBase64(salt),
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
     const formObj = Object.fromEntries(formData.entries());
-    console.log("Form Data:", formObj);
+
+    let passwordHash, passwordSalt;
+    try {
+      const { hash, salt } = await hashPassword(formObj.password);
+      passwordHash = hash;
+      passwordSalt = salt;
+    } catch (err) {
+      console.error("Password hashing failed:", err);
+      alert("Erreur lors du hachage du mot de passe.");
+      return;
+    }
 
     const payload = {
       firstname: formObj.firstname,
       lastname: formObj.lastname,
       email: formObj.email,
-      password: formObj.password,
+      password: passwordHash,
+      salt: passwordSalt,
       address: formObj.address,
       description: formObj.description,
       phoneNumber: formObj.phoneNumber,
@@ -21,7 +69,7 @@ export default function SignUpPage() {
     };
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiBase}/users`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
