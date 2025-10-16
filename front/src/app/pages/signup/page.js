@@ -67,7 +67,6 @@ export default function SignUpPage() {
                   name="firstname"
                   placeholder="Prénom"
                   className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                  required
                 />
               </div>
               <div>
@@ -76,7 +75,6 @@ export default function SignUpPage() {
                   name="lastname"
                   placeholder="Nom"
                   className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                  required
                 />
               </div>
             </div>
