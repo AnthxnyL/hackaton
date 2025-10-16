@@ -17,9 +17,9 @@ export default function ProfilePage() {
     const fetchUser = async () => {
       setLoading(true);
       setError(null);
-        try {
-          const base = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/$/, '')
-          const res = await fetch(`${base}/users/${id}`);
+      try {
+        // utilise l'API déployée fournie
+        const res = await fetch(`https://hackaton-back-delta.vercel.app/users/${id}`);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
