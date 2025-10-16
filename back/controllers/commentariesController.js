@@ -25,13 +25,13 @@ export const getCommentaries = async (req, res) => {
 };
 
 export const createCommentary = async (req, res) => {
-    const { description, userId } = req.body;
+    const { description, userId, parentId } = req.body;
     try {
         const user = await Users.findById(userId);
         if (!user) {
             return res.status(400).json({ message: 'Invalid user ID' });
         }
-        const newCommentary = new Commentaries({ description, user: user });
+        const newCommentary = new Commentaries({ description, user: user, parentId });
         await newCommentary.save();
         res.status(201).json(newCommentary);
     } catch (error) {
@@ -70,3 +70,13 @@ export const deleteCommentary = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const getResponses = async (req, res) => {
+    try {
+        const responses = await Commentaries.find({ parentId: req.params.parentId });
+        res.json(responses);
+    }catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
