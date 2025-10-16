@@ -3,11 +3,7 @@ import bcrypt from 'bcrypt';
 
 export const getUser = async (req, res) => {
   try {
-<<<<<<< HEAD
-    const user = await Users.findById(req.params._id);
-=======
     const user = await User.findById(req.params._id);
->>>>>>> hashed-password
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -61,11 +57,7 @@ export const updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role' });
     }
     try {
-<<<<<<< HEAD
-        const updateUser = await Users.findByIdAndUpdate(
-=======
         const updateUser = await User.findByIdAndUpdate(
->>>>>>> hashed-password
             req.params._id,
             { email, firstname, lastname, password, role, address, description, phoneNumber, avatar },
             { new: true }
@@ -86,11 +78,7 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
     try {
-<<<<<<< HEAD
-        const deleteUser = await Users.findByIdAndDelete(req.params._id);
-=======
         const deleteUser = await User.findByIdAndDelete(req.params._id);
->>>>>>> hashed-password
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -104,13 +92,8 @@ export const deleteUser = async (req, res) => {
 
 export const isAdmin = async (id) => {
   try {
-<<<<<<< HEAD
-    const user = await Users.findById(id);
-    if(user.role === 'admin') {
-=======
     const user = await User.findById(id);
     if (user && user.role === 'admin') {
->>>>>>> hashed-password
       return true;
     }
     return false;
