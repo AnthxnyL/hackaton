@@ -7,14 +7,17 @@ export default function CommentariesPage() {
   const [commentaries, setCommentaries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [replyText, setReplyText] = useState({})
+  const [replyLoading, setReplyLoading] = useState({})
+  const [replyError, setReplyError] = useState({})
 
   useEffect(() => {
     const fetchCommentaries = async () => {
       setLoading(true)
       setError(null)
       try {
-
-        const res = await fetch(`https://hackaton-back-delta.vercel.app/commentaries`)
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+        const res = await fetch(`${apiBase}/commentaries`)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setCommentaries(data)
@@ -59,8 +62,53 @@ export default function CommentariesPage() {
               {c.userId && (
                 <Link href={`/profile/${c.userId._id}`} className="text-pink-900 text-sm italic">Voir profil</Link>
               )}
-              <button className="text-pink-900 text-xs italic">Répondre</button>
+              <button onClick={() => setReplyText(prev => ({ ...prev, [c._id]: prev[c._id] ? '' : '' }))} className="text-pink-900 text-xs italic">Répondre</button>
             </div>
+            {replyText[c._id] !== undefined && (
+              <div className="mt-3">
+                <textarea
+                  value={replyText[c._id] || ''}
+                  onChange={e => setReplyText(prev => ({ ...prev, [c._id]: e.target.value }))}
+                  className="w-full p-2 rounded border"
+                  placeholder="Écrire une réponse..."
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    disabled={replyLoading[c._id]}
+                    onClick={async () => {
+                      const text = (replyText[c._id] || '').trim()
+                      if (!text) return setReplyError(prev => ({ ...prev, [c._id]: 'Le message est vide' }))
+                      setReplyLoading(prev => ({ ...prev, [c._id]: true }))
+                      setReplyError(prev => ({ ...prev, [c._id]: null }))
+                      try {
+                        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+                        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+                        const res = await fetch(`${apiBase}/commentaries`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                          },
+                          body: JSON.stringify({ description: text, parentId: c._id }),
+                        })
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                        setReplyText(prev => ({ ...prev, [c._id]: '' }))
+                        await fetchCommentaries()
+                      } catch (err) {
+                        setReplyError(prev => ({ ...prev, [c._id]: err.message || 'Erreur lors de l envoi' }))
+                      } finally {
+                        setReplyLoading(prev => ({ ...prev, [c._id]: false }))
+                      }
+                    }}
+                    className="bg-pink-600 text-white px-4 py-2 rounded"
+                  >
+                    {replyLoading[c._id] ? 'Envoi...' : 'Envoyer'}
+                  </button>
+                  <button onClick={() => setReplyText(prev => ({ ...prev, [c._id]: undefined }))} className="px-4 py-2 rounded border">Annuler</button>
+                </div>
+                {replyError[c._id] && <div className="text-red-600 text-sm mt-1">{replyError[c._id]}</div>}
+              </div>
+            )}
           </div>
         ))}
       </div>
