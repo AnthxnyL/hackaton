@@ -4,17 +4,14 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import router from './router.js'
 
-// Load environment variables as early as possible
 dotenv.config()
 
 const port = process.env.PORT || 3001;
 const app = express();
 app.use(express.json());
 
-// Configure CORS to explicitly allow common methods and headers and
-// respond to preflight (OPTIONS) requests without redirects.
 const corsOptions = {
-  origin: true, // reflect request origin
+  origin: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
   credentials: true,
@@ -22,7 +19,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// Ensure preflight requests are handled for all routes
 app.options('*', cors(corsOptions));
 
 app.use(router);
