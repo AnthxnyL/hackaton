@@ -2,42 +2,6 @@
 import React from "react";
 
 export default function SignUpPage() {
-  const arrayBufferToBase64 = (buffer) => {
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  };
-
-  const hashPassword = async (password) => {
-    const enc = new TextEncoder();
-    const salt = (window.crypto || globalThis.crypto).getRandomValues(new Uint8Array(16));
-    const keyMaterial = await (window.crypto || globalThis.crypto).subtle.importKey(
-      "raw",
-      enc.encode(password),
-      { name: "PBKDF2" },
-      false,
-      ["deriveBits"]
-    );
-
-    const derivedBits = await (window.crypto || globalThis.crypto).subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 150000,
-        hash: "SHA-256",
-      },
-      keyMaterial,
-      256
-    );
-
-    return {
-      hash: arrayBufferToBase64(derivedBits),
-      salt: arrayBufferToBase64(salt),
-    };
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,23 +9,11 @@ export default function SignUpPage() {
     const formData = new FormData(form);
     const formObj = Object.fromEntries(formData.entries());
 
-    let passwordHash, passwordSalt;
-    try {
-      const { hash, salt } = await hashPassword(formObj.password);
-      passwordHash = hash;
-      passwordSalt = salt;
-    } catch (err) {
-      console.error("Password hashing failed:", err);
-      alert("Erreur lors du hachage du mot de passe.");
-      return;
-    }
-
     const payload = {
       firstname: formObj.firstname,
       lastname: formObj.lastname,
       email: formObj.email,
-      password: passwordHash,
-      salt: passwordSalt,
+      password: formObj.password,
       address: formObj.address,
       description: formObj.description,
       phoneNumber: formObj.phoneNumber,

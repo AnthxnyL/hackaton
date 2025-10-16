@@ -1,23 +1,35 @@
 import Users from '../models/usersModel.js';
+import bcrypt from 'bcrypt';
 import { createOpaqueTokenString, hashToken } from '../utils/tokens.js';
 
 export const signIn = async (req, res) => {
     const { email, password } = req.body;
+    console.debug(`[auth] signIn request for email=${email}`);
     try {
         const user = await Users.findOne({ email });
-        if (!user || user.password !== password) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+        if (!user) {
+            console.debug(`[auth] signIn: no user for email=${email}`);
+            return res.status(401).json({ message: 'No user for this email' });
         }
 
-        const rawToken = createOpaqueTokenString();
-        const tokenHash = hashToken(rawToken);
+        const passwordMatches = await bcrypt.compare(password, user.password);
+        console.debug(`[auth] signIn: email=${email}, passwordMatches=${passwordMatches}`);
+        if (!passwordMatches) {
+            return res.status(401).json({ message: 'Wrong password' });
+        }
+
+    const rawToken = createOpaqueTokenString();
+    const tokenHash = hashToken(rawToken);
         const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
 
-        user.tokens = user.tokens || [];
-        user.tokens.push({ hash: tokenHash, createdAt: new Date(), expiresAt });
-        await user.save();
+    user.tokens = user.tokens || [];
+    user.tokens.push({ hash: tokenHash, createdAt: new Date(), expiresAt });
+    await user.save();
 
-        res.json({ message: 'Sign-in successful', user });
+    const safeUser = { ...user.toObject ? user.toObject() : user };
+    if (safeUser.password) delete safeUser.password;
+
+    res.json({ message: 'Sign-in successful', user: safeUser, token: rawToken });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

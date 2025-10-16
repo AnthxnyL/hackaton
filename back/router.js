@@ -1,5 +1,5 @@
 import express from 'express';
-import user from './routes/userRoutes.js';
+import user from './routes/usersRoutes.js';
 import auth from './routes/authRoutes.js';
 import commentaries from './routes/commentariesRoutes.js';
 
