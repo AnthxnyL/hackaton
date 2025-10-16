@@ -12,32 +12,6 @@ function SmallStat({ label, value, hint }) {
     );
 }
 
-function PieChart({ parts, size = 140 }) {
-    const total = parts.reduce((s, p) => s + p.value, 0) || 1;
-    let angle = 0;
-    const r = size / 2;
-    const cx = r;
-    const cy = r;
-    return (
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            {parts.map((p, i) => {
-                const start = angle;
-                const sweep = (p.value / total) * 360;
-                angle += sweep;
-                const large = sweep > 180 ? 1 : 0;
-                const a0 = (start - 90) * (Math.PI / 180);
-                const a1 = (start + sweep - 90) * (Math.PI / 180);
-                const x0 = cx + r * Math.cos(a0);
-                const y0 = cy + r * Math.sin(a0);
-                const x1 = cx + r * Math.cos(a1);
-                const y1 = cy + r * Math.sin(a1);
-                const d = `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`;
-                return <path key={i} d={d} fill={p.color} stroke="#fff" strokeWidth="0.5" />;
-            })}
-            <circle cx={cx} cy={cy} r={r * 0.45} fill="#fff" />
-        </svg>
-    );
-}
 
 
 function BarChart({ items = [], width = 300, height = 80 }) {
@@ -134,15 +108,11 @@ export default function Listing() {
         const total = adminStats.totalUsers ?? users.length;
         let addressesCount = 0;
         users.forEach((u) => {
-            const g = (u.gender || u.sex || u.sGenre || '').toString().toLowerCase();
-            if (g.includes('f')) genders.female++;
-            else if (g.includes('m')) genders.male++;
-            else genders.other++;
             if (u.address) addressesCount++;
         });
         // fallback to admin addresses if computed is 0
         const addresses = adminStats.addresses ?? addressesCount;
-        return { total, genders, addresses, usersThisMonth: adminStats.usersThisMonth, totalComments: adminStats.totalComments };
+        return { total, addresses, usersThisMonth: adminStats.usersThisMonth, totalComments: adminStats.totalComments };
     }, [users, adminStats]);
 
 
@@ -161,22 +131,7 @@ export default function Listing() {
             </div>
 
             <div className="flex gap-6 items-start">
-                <div className="bg-white bg-opacity-60 p-6 rounded-2xl">
-                    <h2 className="font-semibold text-pink-600 mb-4">Répartition par genre</h2>
-                    <div className="flex items-center gap-6">
-                        <PieChart parts={[
-                            { value: stats.genders.male, color: '#60A5FA' },
-                            { value: stats.genders.female, color: '#F472B6' },
-                            { value: stats.genders.other, color: '#FBBF24' },
-                        ]} />
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#60A5FA] inline-block rounded-full"/> Homme: {stats.genders.male}</div>
-                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#F472B6] inline-block rounded-full"/> Femme: {stats.genders.female}</div>
-                            <div className="flex items-center gap-2"><span className="w-3 h-3 bg-[#FBBF24] inline-block rounded-full"/> Autre: {stats.genders.other}</div>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <div className="bg-white bg-opacity-60 p-6 rounded-2xl flex-1">
                     <h2 className="font-semibold text-pink-600 mb-4">Liste des profils</h2>
                     <div className="grid grid-cols-2 gap-3 max-h-96 overflow-auto">

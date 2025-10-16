@@ -65,96 +65,182 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-pink-100 p-8 w-full">
-      <div className="relative w-full max-w-md rounded-3xl shadow-lg overflow-hidden">
-        <div className="relative z-10 text-center bg-white bg-opacity-70 p-8 rounded-3xl">
-          <h1 className="text-2xl font-semibold mb-4 text-pink-600">
-            Créer un compte
-          </h1>
-          <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-4">
-            <div className="flex gap-2">
-              <div>
-                <input
-                  type="text"
-                  name="firstname"
-                  placeholder="Prénom"
-                  className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-pink-100 to-white p-6">
+      <div className="w-full max-w-4xl bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 transform transition-transform hover:scale-[1.01] will-change-transform">
+        {/* Left visual / branding column */}
+        <div className="hidden md:flex flex-col justify-center items-start gap-4 p-10 bg-gradient-to-b from-pink-100 to-pink-50 animate-left">
+          <h1 className="text-3xl font-extrabold text-pink-600">Bienvenue ✨</h1>
+          <p className="text-pink-500/90">
+            Créez votre compte pour accéder à votre profil. Simple, rapide et sécurisé.
+          </p>
+          <div className="mt-4 w-full rounded-xl overflow-hidden">
+            {/* subtle decorative panel */}
+            <div className="w-full h-40 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-pink-200/50 to-white/0 panel-float" />
+          </div>
+        </div>
+
+        {/* Form column */}
+        <div className="p-6 md:p-10">
+          <div className="max-w-xl mx-auto">
+            <h2 className="text-2xl font-semibold text-pink-600 mb-2 fade-in delayed-1">Créer un compte</h2>
+            <p className="text-sm text-pink-500 mb-6 fade-in delayed-2">
+              Renseignez vos informations pour commencer.
+            </p>
+
+            <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-4 form-stack">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 form-field">
+                <label className="block">
+                  <span className="sr-only">Prénom</span>
+                  <input
+                    type="text"
+                    name="firstname"
+                    placeholder="Prénom"
+                    className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
+                  />
+                </label>
+                <label className="block">
+                  <span className="sr-only">Nom</span>
+                  <input
+                    type="text"
+                    name="lastname"
+                    placeholder="Nom"
+                    className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
+                  />
+                </label>
               </div>
-              <div>
+
+              <label className="block form-field">
+                <span className="sr-only">Email</span>
                 <input
-                  type="text"
-                  name="lastname"
-                  placeholder="Nom"
-                  className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                />
-              </div>
-            </div>
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                required
-              />
-            </div>
-            <div>
-              <input
-                type="url"
-                name="avatar"
-                placeholder="URL de l'image (https://...)"
-                className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                required
-              />
-            </div>
-            <div className="flex gap-2">
-              <div>
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Adresse"
-                  className="w-full px-3 py-2 border rounded-2xl text-pink-400"
+                  type="email"
+                  name="email"
+                  placeholder="Email"
                   required
+                  className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
                 />
-              </div>
-               <div>
+              </label>
+
+              <label className="block form-field">
+                <span className="sr-only">Avatar URL</span>
                 <input
-                  type="text"
-                  name="phoneNumber"
-                  placeholder="Numéro de téléphone"
-                  className="w-full px-3 py-2 border rounded-2xl text-pink-400"
+                  type="url"
+                  name="avatar"
+                  placeholder="URL de l'image (https://...)"
                   required
+                  className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
                 />
+                <p className="text-xs text-pink-400 mt-1">URL publique de votre avatar (optionnel)</p>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 form-field">
+                <label className="block">
+                  <span className="sr-only">Adresse</span>
+                  <input
+                    type="text"
+                    name="address"
+                    placeholder="Adresse"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
+                  />
+                </label>
+                <label className="block">
+                  <span className="sr-only">Téléphone</span>
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    placeholder="Numéro de téléphone"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
+                  />
+                </label>
               </div>
+
+              <label className="block form-field">
+                <span className="sr-only">Description</span>
+                <textarea
+                  name="description"
+                  placeholder="Description"
+                  required
+                  rows="3"
+                  className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition resize-none transform hover:-translate-y-0.5"
+                />
+              </label>
+
+              <label className="block form-field">
+                <span className="sr-only">Mot de passe</span>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Mot de passe"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-transparent bg-white/80 placeholder-pink-300 text-pink-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 transition transform hover:-translate-y-0.5"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-pink-600 to-pink-500 text-white font-semibold rounded-2xl shadow hover:from-pink-700 hover:to-pink-600 transition transform hover:-translate-y-0.5 active:translate-y-0.5 focus:outline-none form-cta"
+              >
+                Créer un compte
+              </button>
+            </form>
+            <div className="mt-6 text-center text-sm text-pink-500 fade-in delayed-3">
+              Déjà un compte ?{" "}
+              <a href="/pages/signin" className="text-pink-600 font-medium hover:underline">
+                Connexion
+              </a>
             </div>
-            <div>
-              <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                required
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                name="password"
-                placeholder="Mot de passe"
-                className="w-full px-3 py-2 border rounded-2xl text-pink-400"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-pink-600 text-white py-2 rounded-3xl hover:bg-pink-700"
-            >
-              Créer un compte
-            </button>
-          </form>
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .fade-in {
+          opacity: 0;
+          transform: translateY(6px);
+          animation: fadeUp 420ms ease forwards;
+        }
+        .delayed-1 { animation-delay: 80ms; }
+        .delayed-2 { animation-delay: 160ms; }
+        .delayed-3 { animation-delay: 240ms; }
+
+        @keyframes fadeUp {
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-stack > * {
+          opacity: 0;
+          transform: translateY(8px);
+          animation: fadeUp 420ms ease forwards;
+        }
+        .form-stack > :nth-child(1) { animation-delay: 120ms; }
+        .form-stack > :nth-child(2) { animation-delay: 180ms; }
+        .form-stack > :nth-child(3) { animation-delay: 240ms; }
+        .form-stack > :nth-child(4) { animation-delay: 300ms; }
+        .form-stack > :nth-child(5) { animation-delay: 360ms; }
+        .form-stack > :nth-child(6) { animation-delay: 420ms; }
+        .form-stack > :nth-child(7) { animation-delay: 480ms; }
+
+        .animate-left { opacity: 0; transform: translateX(-12px); animation: slideInLeft 520ms ease forwards 100ms; }
+        @keyframes slideInLeft { to { opacity: 1; transform: translateX(0); } }
+
+        .panel-float {
+          animation: floaty 6s ease-in-out infinite;
+        }
+        @keyframes floaty {
+          0% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-6px) rotate(-0.2deg); }
+          100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .form-cta {
+          animation: pulseSoft 4.5s ease-in-out infinite;
+        }
+        @keyframes pulseSoft {
+          0%, 100% { transform: translateY(0); box-shadow: 0 10px 20px rgba(219,39,119,0.08); }
+          50% { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(219,39,119,0.12); }
+        }
+      `}</style>
     </div>
   );
 }

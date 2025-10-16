@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -35,18 +35,57 @@ export default function ProfileList() {
   if (error) return <div>Erreur: {error}</div>
 
   return (
-    <div>
-      <h1>Liste des utilisateurs</h1>
-      {users.length === 0 && <p>Aucun utilisateur trouvé.</p>}
-      <ul>
-        {users.map(user => (
-          <li key={user._id} style={{marginBottom:12}}>
-            <Link href={`/pages/profile/${user._id}`} style={{textDecoration:'none',color:'#0366d6'}}>
-              {user.firstname} {user.lastname} {user.email && `- ${user.email}`}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="min-h-screen w-full bg-gradient-to-br from-pink-50 via-pink-100 to-white p-6">
+      <div className="max-w-5xl mx-auto my-7 px-5 p-6 font-sans text-pink-700 dark:text-pink-200">
+        <header className="flex items-baseline justify-between gap-4 mb-4">
+          <div>
+            <h1 className="m-0 text-lg font-bold text-pink-800">Liste des utilisateurs</h1>
+            <p className="mt-1 text-sm text-pink-500">
+              {users.length} utilisateur{users.length > 1 ? 's' : ''}
+            </p>
+          </div>
+        </header>
+
+        {users.length === 0 ? (
+          <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-md">
+            Aucun utilisateur trouvé.
+          </div>
+        ) : (
+          <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+            {users.map(user => {
+              return (
+                <Link
+                  key={user._id}
+                  href={`/pages/profile/${user._id}`}
+                  className="flex items-center gap-3 p-3 bg-pink-50 dark:bg-pink-800 rounded-xl no-underline text-inherit shadow-sm ring-1 ring-pink-100 dark:ring-0 border border-transparent hover:-translate-y-1 transform transition"
+                >
+                  <img
+                    src={user.avatar || user.avatarUrl || '/default-avatar.png'}
+                    alt={`${user.firstname || ''} ${user.lastname || ''}`.trim() || 'Avatar'}
+                    className="min-w-[52px] w-[52px] h-[52px] rounded-full inline-flex items-center justify-center font-bold text-white text-base object-cover bg-gray-100"
+                    loading="lazy"
+                  />
+
+                  <div className="flex-1 overflow-hidden">
+                    <div className="font-semibold text-sm text-pink-700 dark:text-pink-100 truncate">
+                      {user.firstname} {user.lastname}
+                    </div>
+                    {user.email && (
+                      <div className="mt-1 text-xs text-pink-500 dark:text-pink-300 truncate">
+                        {user.email}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-2xl text-pink-300 dark:text-pink-400" aria-hidden="true">
+                    ›
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
