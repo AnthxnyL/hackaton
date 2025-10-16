@@ -1,8 +1,21 @@
 "use client";
 
 import React from "react";
+import { useState, useEffect } from "react";
+import { User } from "../../../models/usersModel";
 
 export default function ProfilePage() {
+const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        // Fetch user data from API or context
+        const fetchUser = async () => {
+            const response = await User.findById(userId);
+            setUser(response);
+        };
+        fetchUser();
+    }, []);
+
   return (
     <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
       <div>
@@ -29,27 +42,25 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-semibold mb-4 text-pink-600">
             Informations et autres détails
           </h1>
-          <div
-            className="border-b-2 border-pink-400/50 pb-2 p-4"
-          >
+          <div className="border-b-2 border-pink-400/50 pb-2 p-4">
             <p className="text-pink-800/60">Mon Rôle</p>
             <p className="text-pink-600">rôle</p>
-            {/* <p className="text-pink-600">{user.role}</p> */}
+            {/* <p className="text-pink-600">{User.role}</p> */}
           </div>
           <div className="border-b-2 border-pink-400/50 pb-2 p-4">
             <p className="text-pink-800/60">Ma Description</p>
             <p className="text-pink-600">Ceci est une description.</p>
-            {/* <p className="text-pink-600">{user.description}</p> */}
+            {/* <p className="text-pink-600">{User.description}</p> */}
           </div>
           <div className="border-b-2 border-pink-400/50 pb-2 p-4">
             <p className="text-pink-800/60">Mon Email</p>
             <p className="text-pink-600">email@example.com</p>
-            {/* <p className="text-pink-600">{user.email}</p> */}
+            {/* <p className="text-pink-600">{User.email}</p> */}
           </div>
           <div className="border-b-2 border-pink-400/50 pb-2 p-4">
             <p className="text-pink-800/60">Mon Adresse</p>
             <p className="text-pink-600">Adresse</p>
-            {/* <p className="text-pink-600">{user.address}</p> */}
+            {/* <p className="text-pink-600">{User.address}</p> */}
           </div>
         </div>
       </div>
