@@ -2,38 +2,37 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 
 export default function Navbar() {
     const pathname = usePathname() || '/'
     const router = useRouter()
 
-    const [isConnected, setIsConnected] = React.useState(false)
+    const [isConnected, setIsConnected] = useState(false)
 
-    React.useEffect(() => {
+    useEffect(() => {
         try {
             const token = localStorage.getItem('token') || localStorage.getItem('user') || localStorage.getItem('auth')
+            
             setIsConnected(Boolean(token))
         } catch (e) {
             setIsConnected(false)
         }
     }, [])
 
-    const signOut = React.useCallback(() => {
+    const signOut = useCallback(() => {
         try {
             localStorage.removeItem('token')
             localStorage.removeItem('user')
             localStorage.removeItem('auth')
-            // remove other possible keys if needed
             setIsConnected(false)
             router.push('/pages/signin')
         } catch (e) {
-            // fallback: reload to reset state
             window.location.href = '/pages/signin'
         }
     }, [router])
 
-    const links = React.useMemo(() => {
+    const links = useMemo(() => {
         const base = [
             { label: 'Commentaires', href: '/pages/commentaries' },
             { label: 'Profils', href: '/pages/profile' },

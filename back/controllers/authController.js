@@ -20,7 +20,7 @@ export const signIn = async (req, res) => {
 
     const rawToken = createOpaqueTokenString();
     const tokenHash = hashToken(rawToken);
-        const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
 
     user.tokens = user.tokens || [];
     user.tokens.push({ hash: tokenHash, createdAt: new Date(), expiresAt });
