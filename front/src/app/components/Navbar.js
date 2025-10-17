@@ -35,7 +35,6 @@ export default function Navbar() {
 
     const links = React.useMemo(() => {
         const base = [
-            { label: 'Accueil', href: '/' },
             { label: 'Commentaires', href: '/pages/commentaries' },
             { label: 'Profils', href: '/pages/profile' },
         ]
