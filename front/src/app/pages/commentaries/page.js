@@ -78,6 +78,7 @@ export default function CommentariesPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
+                      { console.log(user)}
                       {user && user.avatar ? (
                         <img
                           src={user.avatar}
@@ -109,11 +110,6 @@ export default function CommentariesPage() {
                             >
                               {new Date(c.createdAt).toLocaleString()}
                             </time>
-                            {user && user.role && (
-                              <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">
-                                {user.role}
-                              </span>
-                            )}
                           </div>
                         </div>
 
