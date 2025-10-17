@@ -9,8 +9,13 @@ export default function CommentariesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [replyText, setReplyText] = useState({});
+  const [showResponses, setShowResponses] = useState({});
+  const [responsesMap, setResponsesMap] = useState({});
+  const [replyTextLocal, setReplyTextLocal] = useState({});
+  const [hasResponsesCount, setHasResponsesCount] = useState({});
+  const [replyFormOpen, setReplyFormOpen] = useState({});
   const [replyLoading, setReplyLoading] = useState({});
-  const [replyError, setReplyError] = useState({});
+  const [replyErrorLocal, setReplyErrorLocal] = useState({});
 
   useEffect(() => {
     const fetchCommentaries = async () => {
@@ -35,6 +40,56 @@ export default function CommentariesPage() {
 
     fetchCommentaries();
   }, []);
+
+  // fetch number of responses per comment (to know whether to show the 'Afficher les réponses' button)
+  useEffect(() => {
+    if (!commentaries.length) return;
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+    commentaries.forEach(async (c) => {
+      try {
+        const res = await fetch(`${apiBase}/commentaries/responses/${c._id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setHasResponsesCount((s) => ({ ...s, [c._id]: data.length }));
+        }
+      } catch (err) {
+        // ignore
+      }
+    });
+  }, [commentaries]);
+
+  const sendReply = async (parentId) => {
+    const txt = (replyTextLocal[parentId] || '').trim();
+    if (!txt) return;
+    setReplyErrorLocal((s) => ({ ...s, [parentId]: null }));
+    setReplyLoading((s) => ({ ...s, [parentId]: true }));
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${apiBase}/commentaries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ description: txt, parentId }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('Vous devez être connecté pour répondre.');
+        const body = await res.text().catch(() => null);
+        throw new Error(body || `HTTP ${res.status}`);
+      }
+      const created = await res.json();
+      // update responses map and counts
+      setResponsesMap((s) => ({ ...s, [parentId]: s[parentId] ? [created, ...s[parentId]] : [created] }));
+      setHasResponsesCount((s) => ({ ...s, [parentId]: (s[parentId] || 0) + 1 }));
+      setReplyTextLocal((s) => ({ ...s, [parentId]: '' }));
+      setReplyFormOpen((s) => ({ ...s, [parentId]: false }));
+    } catch (err) {
+      console.error(err);
+      setReplyErrorLocal((s) => ({ ...s, [parentId]: err.message || 'Erreur lors de l’envoi' }));
+    } finally {
+      setReplyLoading((s) => ({ ...s, [parentId]: false }));
+    }
+  };
 
   if (loading)
     return (
@@ -127,17 +182,17 @@ export default function CommentariesPage() {
                               Profil
                             </Link>
                           )}
-                          <button
+                          {/* <button
                             type="button"
                             className="text-pink-700 text-sm hover:underline"
                             aria-label="Répondre au commentaire"
                           >
                             Répondre
-                          </button>
+                          </button> */}
                         </div>
                       </div>
 
-                      <div className="mt-3 text-pink-600 text-sm md:text-base leading-relaxed">
+                        <div className="mt-3 text-pink-600 text-sm md:text-base leading-relaxed">
                         <details className="group">
                           <summary className="list-none cursor-pointer select-none">
                             <span className="line-clamp-3 group-open:line-clamp-none">{c.description}</span>
@@ -146,6 +201,55 @@ export default function CommentariesPage() {
                           <div className="mt-2 text-pink-600">{c.description}</div>
                         </details>
                       </div>
+                        {/* Responses area: show only if there are responses or when opened */}
+                        <div className="mt-3">
+                          {hasResponsesCount[c._id] > 0 && !showResponses[c._id] && (
+                            <button
+                              className="text-sm text-pink-600 hover:underline"
+                              onClick={async () => {
+                                try {
+                                  const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+                                  const res = await fetch(`${apiBase}/commentaries/responses/${c._id}`);
+                                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                                  const data = await res.json();
+                                  setResponsesMap((s) => ({ ...s, [c._id]: data }));
+                                  setShowResponses((s) => ({ ...s, [c._id]: true }));
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                            >Afficher les réponses ({hasResponsesCount[c._id]})</button>
+                          )}
+
+                          {showResponses[c._id] && (
+                            <div>
+                              <button className="text-sm text-pink-600 hover:underline" onClick={() => setShowResponses((s) => ({ ...s, [c._id]: false }))}>Masquer les réponses</button>
+                              <div className="mt-3 space-y-3">
+                                {(responsesMap[c._id] || []).map((r) => (
+                                  <div key={r._id} className="bg-white/60 p-3 rounded-lg">
+                                    <div className="text-sm font-medium text-pink-700">{r.userId ? `${r.userId.firstname} ${r.userId.lastname}` : 'Utilisateur supprimé'}</div>
+                                    <div className="text-sm text-pink-600">{r.description}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mt-3 flex justify-end">
+                            {!replyFormOpen[c._id] ? (
+                              <button className="text-sm bg-pink-600 text-white px-3 py-1 rounded" onClick={() => setReplyFormOpen((s) => ({ ...s, [c._id]: true }))}>Répondre</button>
+                            ) : (
+                              <div className="w-full">
+                                <textarea value={replyTextLocal[c._id] || ''} onChange={(e) => setReplyTextLocal((s) => ({ ...s, [c._id]: e.target.value }))} className="w-full border border-pink-200 rounded-md p-2 text-pink-300" placeholder="Répondre..." />
+                                <div className="mt-2 flex gap-2 justify-end">
+                                  <button className="px-3 py-1 bg-pink-100 text-pink-300 rounded" onClick={() => setReplyFormOpen((s) => ({ ...s, [c._id]: false }))} disabled={replyLoading[c._id]}>Annuler</button>
+                                  <button className="px-3 py-1 bg-pink-600 text-white rounded" onClick={() => sendReply(c._id)} disabled={replyLoading[c._id]}>{replyLoading[c._id] ? 'Envoi...' : 'Répondre'}</button>
+                                </div>
+                                {replyErrorLocal[c._id] && <div className="text-sm text-red-600 mt-2">{replyErrorLocal[c._id]}</div>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                     </div>
                   </div>
                 </article>
