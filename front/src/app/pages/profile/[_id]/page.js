@@ -13,6 +13,16 @@ export default function ProfilePage() {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [authRequired, setAuthRequired] = useState(false);
+  const [me, setMe] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +56,43 @@ export default function ProfilePage() {
 
     fetchUser();
   }, [id]);
+
+  // fetch current logged user to determine admin status
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) return;
+        const res = await fetch(`${apiBase}/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const meData = await res.json();
+        setMe(meData);
+        setIsAdmin(meData?.role === 'admin');
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchMe();
+  }, []);
+
+  // initialize form and owner flag when user or me changes
+  useEffect(() => {
+    if (!user) return;
+    setFormData({
+      email: user.email || '',
+      firstname: user.firstname || '',
+      lastname: user.lastname || '',
+      address: user.address || '',
+      description: user.description || '',
+      phoneNumber: user.phoneNumber || '',
+      avatar: user.avatar || '',
+      role: user.role || 'user'
+    });
+    setIsOwner(me && user && me._id === user._id);
+  }, [user, me]);
 
   useEffect(() => {
     if (!user) return;
@@ -89,6 +136,76 @@ export default function ProfilePage() {
     });
   };
 
+  const toggleEdit = () => {
+    setSaveError(null);
+    setSaveSuccess(false);
+    setEditMode((s) => !s);
+  };
+
+  const handleChange = (key, value) => {
+    setFormData((s) => ({ ...s, [key]: value }));
+  };
+
+  const saveUpdate = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const payload = { ...formData };
+      Object.keys(payload).forEach(k => {
+        if (payload[k] === '') delete payload[k];
+      });
+
+      const res = await fetch(`${apiBase}/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const updated = await res.json();
+      setUser(updated);
+      setSaveSuccess(true);
+      setEditMode(false);
+    } catch (e) {
+      setSaveError(e.message || 'Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteUser = async () => {
+    if (!confirm('Supprimer cet utilisateur ? Cette action est irréversible.')) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${apiBase}/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+  // success: redirect to profile listing page
+  try { router.push('/pages/profile'); } catch (e) { router.push('/pages/profile'); }
+    } catch (e) {
+      setDeleteError(e.message || 'Erreur lors de la suppression');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!id) return <div>Identifiant manquant dans l'URL</div>
   if (loading) return (
     <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
@@ -122,26 +239,71 @@ export default function ProfilePage() {
         </header>
 
         <main className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile card */}
           <section className="col-span-1 flex flex-col items-center md:items-start gap-4 p-6 rounded-2xl bg-white/40 backdrop-blur-md border border-pink-200/40 shadow-lg">
-            {user.avatar ? (
-              <img
-                src={user.avatar}
-                alt={`${user.firstname} ${user.lastname}`}
-                className="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover object-center border-4 border-white shadow-sm"
-              />
-            ) : (
-              <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center text-white text-2xl font-semibold border-4 border-white shadow-sm">
-                {(user.firstname?.[0] || 'U') + (user.lastname?.[0] || '')}
+            <div className="w-full flex flex-col items-center md:items-start">
+              <div className="relative">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={`${user.firstname} ${user.lastname}`}
+                    className="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover object-center border-4 border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center text-white text-2xl font-semibold border-4 border-white shadow-sm">
+                    {(user.firstname?.[0] || 'U') + (user.lastname?.[0] || '')}
+                  </div>
+                )}
               </div>
-            )}
 
-            <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold text-pink-600">{user.firstname} {user.lastname}</h2>
-              <p className="text-sm text-pink-800/60 mt-1">{user.role || '—'}</p>
+              <div className="mt-4 w-full">
+                {editMode ? (
+                  <div className="w-full space-y-3">
+                    <div className="flex gap-2 w-full">
+                      <input
+                        className="flex-1 border rounded px-3 py-2 text-pink-600 w-full"
+                        value={formData.firstname}
+                        onChange={(e) => handleChange('firstname', e.target.value)}
+                        placeholder="Prénom"
+                      />
+                      <input
+                        className="flex-1 border rounded px-3 py-2 text-pink-600 w-full"
+                        value={formData.lastname}
+                        onChange={(e) => handleChange('lastname', e.target.value)}
+                        placeholder="Nom"
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <label className="text-xs text-pink-800/60 mb-1 block">Avatar (URL)</label>
+                      <input
+                        className="w-full border rounded px-3 py-2 text-pink-600 placeholder-pink-400"
+                        value={formData.avatar}
+                        onChange={(e) => handleChange('avatar', e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-pink-800/60">Rôle:</span>
+                      <select
+                        className="border rounded px-2 py-1 text-pink-600"
+                        value={formData.role}
+                        onChange={(e) => handleChange('role', e.target.value)}
+                        disabled={!isAdmin}
+                      >
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center md:text-left w-full">
+                    <h2 className="text-xl font-semibold text-pink-600">{user.firstname} {user.lastname}</h2>
+                    <p className="text-sm text-pink-800/60 mt-1">{user.role || '—'}</p>
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Stats */}
             <div className="w-full mt-4 p-4 rounded-lg bg-white/60 border border-pink-200/40">
               <h4 className="text-sm font-semibold text-pink-600 mb-2">Statistiques</h4>
               <div className="space-y-2">
@@ -160,34 +322,80 @@ export default function ProfilePage() {
           </section>
 
           <section className="col-span-2 space-y-6">
-            {/* User info */}
-            <div className="p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
-              <h3 className="text-lg font-semibold text-pink-600 mb-4">Informations personnelles</h3>
+              {/* User info */}
+                  <div className="p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
+                    <h3 className="text-lg font-semibold text-pink-600 mb-4">Informations personnelles</h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                  <p className="text-xs text-pink-800/60">Description</p>
-                  <p className="mt-1 text-pink-600">{user.description || '—'}</p>
-                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                      <p className="text-xs text-pink-800/60">Description</p>
+                      {editMode ? (
+                      <textarea className="mt-1 w-full border rounded p-2 text-pink-600" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} />
+                      ) : (
+                      <p className="mt-1 text-pink-600">{user.description || '—'}</p>
+                      )}
+                    </div>
 
-                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                  <p className="text-xs text-pink-800/60">Adresse</p>
-                  <p className="mt-1 text-pink-600">{user.address || '—'}</p>
-                </div>
+                    <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                      <p className="text-xs text-pink-800/60">Adresse</p>
+                      {editMode ? (
+                      <input className="mt-1 w-full border rounded px-2 py-1 text-pink-600" value={formData.address} onChange={(e) => handleChange('address', e.target.value)} />
+                      ) : (
+                      <p className="mt-1 text-pink-600">{user.address || '—'}</p>
+                      )}
+                    </div>
 
-                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                  <p className="text-xs text-pink-800/60">Email</p>
-                  <p className="mt-1 text-pink-600 break-all">{user.email}</p>
-                </div>
+                    <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                      <p className="text-xs text-pink-800/60">Email</p>
+                      {editMode ? (
+                      <input className="mt-1 w-full border rounded px-2 py-1 text-pink-600 break-all" value={formData.email} onChange={(e) => handleChange('email', e.target.value)} />
+                      ) : (
+                      <p className="mt-1 text-pink-600 break-all">{user.email}</p>
+                      )}
+                    </div>
 
-                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                  <p className="text-xs text-pink-800/60">Téléphone</p>
-                  <p className="mt-1 text-pink-600">{user.phoneNumber || '—'}</p>
-                </div>
-              </div>
-            </div>
+                    <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                      <p className="text-xs text-pink-800/60">Téléphone</p>
+                      {editMode ? (
+                      <input className="mt-1 w-full border rounded px-2 py-1 text-pink-600" value={formData.phoneNumber} onChange={(e) => handleChange('phoneNumber', e.target.value)} />
+                      ) : (
+                      <p className="mt-1 text-pink-600">{user.phoneNumber || '—'}</p>
+                      )}
+                    </div>
+                    </div>
 
-            {/* User Comments */}
+                    {/* Admin controls */}
+                    <div className="mt-4 flex items-center gap-3 justify-end">
+                    {isAdmin && (
+                      <>
+                      {editMode ? (
+                        <>
+                        <button className="px-4 py-2 bg-gray-100 text-pink-800 rounded" onClick={() => { setEditMode(false); setFormData({
+                          email: user.email || '',
+                          firstname: user.firstname || '',
+                          lastname: user.lastname || '',
+                          address: user.address || '',
+                          description: user.description || '',
+                          phoneNumber: user.phoneNumber || '',
+                          avatar: user.avatar || '',
+                          role: user.role || 'user'
+                        }); }}>Annuler</button>
+                        <button className="px-4 py-2 bg-pink-600 text-white rounded" onClick={saveUpdate} disabled={saving}>{saving ? 'Sauvegarde...' : 'Sauvegarder'}</button>
+                        </>
+                      ) : (
+                          <div className="flex gap-2">
+                            <button className="px-4 py-2 bg-pink-600 text-white rounded" onClick={toggleEdit}>Modifier</button>
+                            <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={deleteUser} disabled={deleting}>{deleting ? 'Suppression...' : 'Supprimer'}</button>
+                          </div>
+                      )}
+                      </>
+                    )}
+                    </div>
+                    {saveError && <div className="mt-2 text-sm text-red-600">{saveError}</div>}
+                    {saveSuccess && <div className="mt-2 text-sm text-green-600">Modifications enregistrées</div>}
+                  </div>
+
+                  {/* User Comments */}
             <div className="p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
               <h3 className="text-lg font-semibold text-pink-600 mb-4">
                 Ses commentaires ({userComments.length})
