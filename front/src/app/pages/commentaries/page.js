@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import AddButton from '../../components/addButton';
 
 export default function CommentariesPage() {
   const [commentaries, setCommentaries] = useState([]);
@@ -153,6 +154,11 @@ export default function CommentariesPage() {
           )}
         </section>
       </div>
+      <AddButton onCreate={(created) => setCommentaries((prev) => [
+        // populate user lightly to match UI expectations
+        { ...created, userId: { firstname: 'Vous', lastname: '', _id: 'me' } },
+        ...prev
+      ])} />
     </main>
   )
 }

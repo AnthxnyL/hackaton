@@ -25,10 +25,12 @@ function BarChart({ items = [], width = 300, height = 80 }) {
                 const x = idx * step + (step - w) / 2;
                 const h = (it.count / max) * (height - 20);
                 const y = height - h - 10;
+                const parts = it._id ? it._id.split('-') : [];
+                const label = parts.length === 3 ? `${parts[2]}/${parts[1]}` : (it._id?.slice(5) || '');
                 return (
                     <g key={it._id || idx}>
                         <rect x={x} y={y} width={w} height={h} rx="3" fill="#F472B6" />
-                        <text x={x + w / 2} y={height - 2} fontSize="10" textAnchor="middle" fill="#6b2135">{it._id?.slice(5) || ''}</text>
+                        <text x={x + w / 2} y={height - 2} fontSize="10" textAnchor="middle" fill="#6b2135">{label}</text>
                     </g>
                 );
             })}
@@ -51,7 +53,6 @@ export default function Listing() {
                 const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
 
 
-                // Prepare auth header if token available (admin routes are protected)
                 const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -62,7 +63,6 @@ export default function Listing() {
                     return Array.isArray(data) ? data : (data.users || []);
                 }).catch(() => []);
 
-                // Fetch admin numbers (may be protected; fall back if not available)
                 const totalP = fetch(`${apiBase}/admin/numbers`, { headers }).then(async (r) => {
                     if (!r.ok) throw new Error(`admin/numbers: HTTP ${r.status}`);
                     return await r.json();
@@ -111,13 +111,11 @@ export default function Listing() {
     }, []);
 
     const stats = useMemo(() => {
-        // prefer admin-provided totals when available
         const total = adminStats.totalUsers ?? users.length;
         let addressesCount = 0;
         users.forEach((u) => {
             if (u.address) addressesCount++;
         });
-        // fallback to admin addresses if computed is 0
         const addresses = adminStats.addresses ?? addressesCount;
         return { total, addresses, usersThisMonth: adminStats.usersThisMonth, totalComments: adminStats.totalComments };
     }, [users, adminStats]);
