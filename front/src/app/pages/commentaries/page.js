@@ -60,8 +60,7 @@ export default function CommentariesPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
       if (!token) {
-        // If not authenticated redirect to signin
-        router.push('/signin');
+        router.push('/pages/signin');
         return;
       }
 
@@ -212,9 +211,7 @@ export default function CommentariesPage() {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // remove from commentaries list
       setCommentaries((prev) => prev.filter((c) => c._id !== id));
-      // also remove responses and counts if present
       setResponsesMap((s) => {
         const copy = { ...s };
         delete copy[id];
