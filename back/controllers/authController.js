@@ -65,3 +65,18 @@ export const signOut = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const me = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) return res.status(401).json({ message: 'Not authenticated' });
+
+        const safeUser = { ...(user.toObject ? user.toObject() : user) };
+        if (safeUser.password) delete safeUser.password;
+
+        res.json(safeUser);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
