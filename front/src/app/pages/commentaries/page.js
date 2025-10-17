@@ -25,7 +25,7 @@ export default function CommentariesPage() {
         // const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
         // const res = await fetch(`${apiBase}/commentaries`)
         const res = await fetch(
-          `https://hackaton-back-delta.vercel.app/commentaries`
+          `http://localhost:3001/commentaries`
         );
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -133,6 +133,7 @@ export default function CommentariesPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
+                      { console.log(user)}
                       {user && user.avatar ? (
                         <img
                           src={user.avatar}
@@ -164,11 +165,6 @@ export default function CommentariesPage() {
                             >
                               {new Date(c.createdAt).toLocaleString()}
                             </time>
-                            {user && user.role && (
-                              <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">
-                                {user.role}
-                              </span>
-                            )}
                           </div>
                         </div>
 
@@ -196,9 +192,7 @@ export default function CommentariesPage() {
                         <details className="group">
                           <summary className="list-none cursor-pointer select-none">
                             <span className="line-clamp-3 group-open:line-clamp-none">{c.description}</span>
-                            <span className="ml-2 text-xs text-pink-700 underline">…</span>
                           </summary>
-                          <div className="mt-2 text-pink-600">{c.description}</div>
                         </details>
                       </div>
                         {/* Responses area: show only if there are responses or when opened */}
