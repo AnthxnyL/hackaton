@@ -141,9 +141,7 @@ export default function CommentariesPage() {
                         <details className="group">
                           <summary className="list-none cursor-pointer select-none">
                             <span className="line-clamp-3 group-open:line-clamp-none">{c.description}</span>
-                            <span className="ml-2 text-xs text-pink-700 underline">…</span>
                           </summary>
-                          <div className="mt-2 text-pink-600">{c.description}</div>
                         </details>
                       </div>
                     </div>
