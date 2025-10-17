@@ -20,6 +20,20 @@ const userSchema = new mongoose.Schema({
     ],
 });
 
+userSchema.pre('findOneAndDelete', async function(next) {
+    try {
+        const userId = this.getQuery()._id;
+        
+        const { default: Commentaries } = await import('./commentariesModel.js');
+        
+        await Commentaries.deleteMany({ userId: userId });
+        
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
 const User = mongoose.model('User', userSchema);
 
 export default User;

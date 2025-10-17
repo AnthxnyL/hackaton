@@ -1,4 +1,5 @@
 import User from '../models/usersModel.js';
+import Commentaries from '../models/commentariesModel.js';
 import bcrypt from 'bcrypt';
 
 export const getUser = async (req, res) => {
@@ -78,14 +79,34 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
     try {
+        const deletedCommentsCount = await deleteUserWithComments(req.params._id);
+        
         const deleteUser = await User.findByIdAndDelete(req.params._id);
         if (!deleteUser) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User deleted successfully' });
+        
+        res.json({ 
+            message: 'User deleted successfully', 
+            deletedComments: deletedCommentsCount 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+export const deleteUserWithComments = async (userId) => {
+    try {
+        const deletedComments = await Commentaries.deleteMany({ userId: userId });
+        
+        console.log(`Deleted ${deletedComments.deletedCount} comments for user ${userId}`);
+        
+        return deletedComments.deletedCount;
+    } catch (error) {
+        console.error('Error deleting user comments:', error);
+        throw error;
     }
 };
 
