@@ -7,6 +7,7 @@ export default function ProfileList() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [authRequired, setAuthRequired] = useState(false)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -18,7 +19,13 @@ export default function ProfileList() {
         const res = await fetch(`${apiBase}/users`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
         })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        if (!res.ok) {
+          if (res.status === 401) {
+            setAuthRequired(true)
+            return
+          }
+          throw new Error(`HTTP ${res.status}`)
+        }
         const data = await res.json()
         setUsers(data)
       } catch (err) {
@@ -31,7 +38,23 @@ export default function ProfileList() {
     fetchUsers()
   }, [])
 
-  if (loading) return <div>Chargement des utilisateurs...</div>
+  if (loading) return (
+     <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
+      <div className="font-bold mb-4 text-pink-600">Chargement...</div>
+    </div>
+  )
+  if (authRequired) return (
+    <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
+      <div className="max-w-md mx-auto bg-white/80 p-8 rounded-2xl shadow">
+        <h2 className="text-xl font-semibold text-pink-600 mb-2">Veuillez vous inscrire</h2>
+        <p className="text-sm text-pink-700/80 mb-4">Pour accéder à la liste des utilisateurs, vous devez être connecté(e). Créez un compte pour continuer.</p>
+        <div className="flex gap-3 justify-end">
+          <button className="px-4 py-2 bg-pink-100 text-pink-600 rounded" onClick={() => window.location.href = '/pages/signin'}>Se connecter</button>
+          <button className="px-4 py-2 bg-pink-600 text-white rounded" onClick={() => window.location.href = '/pages/signup'}>S'inscrire</button>
+        </div>
+      </div>
+    </div>
+  )
   if (error) return <div>Erreur: {error}</div>
 
   return (

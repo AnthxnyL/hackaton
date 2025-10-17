@@ -2,12 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import AddButton from '../../components/addButton';
 
 export default function CommentariesPage() {
   const [commentaries, setCommentaries] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userComments, setUserComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [replyText, setReplyText] = useState({});
   const [showResponses, setShowResponses] = useState({});
   const [responsesMap, setResponsesMap] = useState({});
@@ -47,6 +52,61 @@ export default function CommentariesPage() {
     }
   };
 
+  const fetchMe = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$|\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      if (!token) {
+        // If not authenticated redirect to signin
+        router.push('/signin');
+        return;
+      }
+
+      const res = await fetch(`${apiBase}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || 'Impossible de récupérer les informations du profil');
+      }
+
+      const data = await res.json();
+      const newUser = data.user || data;
+      setCurrentUser(newUser);
+
+      // fetch all comments and filter by this user
+      setCommentsLoading(true);
+      try {
+        const cRes = await fetch(`${apiBase}/commentaries`);
+        if (!cRes.ok) throw new Error(`HTTP ${cRes.status}`);
+        const allComments = await cRes.json();
+        const filtered = (Array.isArray(allComments) ? allComments : []).filter(c => {
+          if (!c.userId) return false;
+          const uid = newUser._id || newUser.id;
+          if (typeof c.userId === 'string') return c.userId === uid;
+          return (c.userId._id === uid) || (c.userId === uid);
+        });
+        const sorted = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setUserComments(sorted);
+      } catch (err) {
+        console.error('Erreur récupération commentaires:', err);
+        setUserComments([]);
+      } finally {
+        setCommentsLoading(false);
+      }
+
+      return;
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la récupération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchCommentaries = async () => {
       setLoading(true);
@@ -75,6 +135,8 @@ export default function CommentariesPage() {
     };
 
     fetchCommentaries();
+    // also fetch current user (if any)
+    fetchMe();
   }, []);
 
   useEffect(() => {
@@ -139,6 +201,36 @@ export default function CommentariesPage() {
     }
   };
 
+  const deleteComment = async (id) => {
+    if (!id) return;
+    if (!confirm('Supprimer ce commentaire ? Cette action est irréversible.')) return;
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${apiBase}/commentaries/${id}`, {
+        method: 'DELETE',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // remove from commentaries list
+      setCommentaries((prev) => prev.filter((c) => c._id !== id));
+      // also remove responses and counts if present
+      setResponsesMap((s) => {
+        const copy = { ...s };
+        delete copy[id];
+        return copy;
+      });
+      setHasResponsesCount((s) => {
+        const copy = { ...s };
+        delete copy[id];
+        return copy;
+      });
+    } catch (err) {
+      console.error(err);
+      alert(`Erreur lors de la suppression: ${err.message || err}`);
+    }
+  };
+
   if (loading)
     return (
       <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
@@ -182,7 +274,6 @@ export default function CommentariesPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
-                      { console.log(user)}
                       {user && user.avatar ? (
                             <img
                               src={user.avatar}
@@ -227,13 +318,18 @@ export default function CommentariesPage() {
                               Profil
                             </Link>
                           )}
-                          {/* <button
-                            type="button"
-                            className="text-pink-700 text-sm hover:underline"
-                            aria-label="Répondre au commentaire"
-                          >
-                            Répondre
-                          </button> */}
+
+                          {/* Admin-only delete button */}
+                          {currentUser && currentUser.role === 'admin' && (
+                            <button
+                              type="button"
+                              className="text-sm text-red-600 hover:underline ml-2"
+                              onClick={() => deleteComment(c._id)}
+                              aria-label={`Supprimer le commentaire de ${displayName(user)}`}
+                            >
+                              Supprimer
+                            </button>
+                          )}
                         </div>
                       </div>
 

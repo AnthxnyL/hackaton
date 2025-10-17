@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
   const params = useParams()
@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [authRequired, setAuthRequired] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!id) return;
@@ -26,6 +28,11 @@ export default function ProfilePage() {
           headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
         });
         if (!res.ok) {
+          if (res.status === 401) {
+            setAuthRequired(true);
+            setLoading(false);
+            return;
+          }
           throw new Error(`HTTP ${res.status}`);
         }
         const data = await res.json();
@@ -86,6 +93,18 @@ export default function ProfilePage() {
   if (loading) return (
     <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
       <div className="font-bold mb-4 text-pink-600">Chargement...</div>
+    </div>
+  )
+  if (authRequired) return (
+    <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
+      <div className="max-w-md mx-auto bg-white/80 p-8 rounded-2xl shadow">
+        <h2 className="text-xl font-semibold text-pink-600 mb-2">Veuillez vous inscrire ou vous connecter</h2>
+        <p className="text-sm text-pink-700/80 mb-4">Pour accéder à ce profil, vous devez être connecté(e).</p>
+        <div className="flex gap-3 justify-end">
+          <button className="px-4 py-2 bg-pink-100 text-pink-600 rounded" onClick={() => router.push('/pages/signin')}>Se connecter</button>
+          <button className="px-4 py-2 bg-pink-600 text-white rounded" onClick={() => router.push('/pages/signup')}>S'inscrire</button>
+        </div>
+      </div>
     </div>
   )
   if (error) return <div>Erreur: {error}</div>

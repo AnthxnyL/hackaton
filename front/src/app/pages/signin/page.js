@@ -13,7 +13,6 @@ export default function SignInPage() {
       email: formObj.email,
       password: formObj.password,
     };
-    console.log("Submitting sign-in with payload:", payload);
     try {
       const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
       const res = await fetch(`${apiBase}/auth/signin`, {
@@ -21,7 +20,6 @@ export default function SignInPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      console.log("Received response:", res);
       const contentType = res.headers.get('content-type') || '';
       let data;
       if (contentType.includes('application/json')) {
@@ -34,7 +32,6 @@ export default function SignInPage() {
       }
       if (res.ok) {
         form.reset();
-        console.log("Sign-in successful:", data);
         try {
           if (data && data.token) {
         localStorage.setItem('token', data.token);
