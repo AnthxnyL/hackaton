@@ -60,8 +60,7 @@ export default function CommentariesPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
       if (!token) {
-        // If not authenticated redirect to signin
-        router.push('/signin');
+        router.push('/pages/signin');
         return;
       }
 
