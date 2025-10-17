@@ -20,7 +20,7 @@ export default function CommentariesPage() {
         // const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
         // const res = await fetch(`${apiBase}/commentaries`)
         const res = await fetch(
-          `https://hackaton-back-delta.vercel.app/commentaries`
+          `http://localhost:3001/commentaries`
         );
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
