@@ -16,21 +16,60 @@ export default function CommentariesPage() {
   const [replyFormOpen, setReplyFormOpen] = useState({});
   const [replyLoading, setReplyLoading] = useState({});
   const [replyErrorLocal, setReplyErrorLocal] = useState({});
+  const [usersMap, setUsersMap] = useState({});
+
+  const displayName = (user) => {
+    if (!user) return 'Utilisateur supprimé';
+    // if user is an id string, try to resolve from cache
+    if (typeof user === 'string') {
+      const cached = usersMap[user];
+      if (cached) return `${(cached.firstname || '').trim()} ${(cached.lastname || '').trim()}`.trim() || 'Utilisateur';
+      return 'Utilisateur';
+    }
+    const fn = user.firstname || '';
+    const ln = user.lastname || '';
+    const full = `${fn} ${ln}`.trim();
+    return full || 'Utilisateur';
+  };
+
+  const fetchUser = async (id) => {
+    if (!id) return null;
+    if (usersMap[id]) return usersMap[id];
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const res = await fetch(`${apiBase}/users/${id}`, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+      if (!res.ok) return null;
+      const u = await res.json();
+      setUsersMap((s) => ({ ...s, [id]: u }));
+      return u;
+    } catch (err) {
+      return null;
+    }
+  };
 
   useEffect(() => {
     const fetchCommentaries = async () => {
       setLoading(true);
       setError(null);
       try {
-        // const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
-        // const res = await fetch(`${apiBase}/commentaries`)
-        const res = await fetch(
-          `http://localhost:3001/commentaries`
-        );
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+        const res = await fetch(`${apiBase}/commentaries`)
+        // const res = await fetch(
+        //   `http://localhost:3001/commentaries`
+        // );
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setCommentaries(data);
+        // resolve user ids for comments that only contain an id
+        data.forEach((c) => {
+          const uid = c.userId;
+          if (uid && typeof uid === 'string' && !usersMap[uid]) {
+            // fetch and cache, don't await
+            fetchUser(uid).catch(() => null);
+          }
+        });
       } catch (err) {
         setError(err.message || "Erreur lors de la récupération");
       } finally {
@@ -41,7 +80,6 @@ export default function CommentariesPage() {
     fetchCommentaries();
   }, []);
 
-  // fetch number of responses per comment (to know whether to show the 'Afficher les réponses' button)
   useEffect(() => {
     if (!commentaries.length) return;
     const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
@@ -78,9 +116,22 @@ export default function CommentariesPage() {
         throw new Error(body || `HTTP ${res.status}`);
       }
       const created = await res.json();
-      // update responses map and counts
-      setResponsesMap((s) => ({ ...s, [parentId]: s[parentId] ? [created, ...s[parentId]] : [created] }));
-      setHasResponsesCount((s) => ({ ...s, [parentId]: (s[parentId] || 0) + 1 }));
+      const createdForClient = { ...created };
+      // If backend returned only an id for userId, try to fetch the actual user and update later
+      if (createdForClient.userId && typeof createdForClient.userId === 'string') {
+        const uid = createdForClient.userId;
+        // optimistically insert with the id (displayName will try to resolve from cache)
+        setResponsesMap((s) => ({ ...s, [parentId]: s[parentId] ? [createdForClient, ...s[parentId]] : [createdForClient] }));
+        // fetch user and update cache/state when resolved
+        fetchUser(uid).then((u) => {
+          if (!u) return;
+          setResponsesMap((s) => ({ ...s, [parentId]: (s[parentId] || []).map(item => item.userId === uid ? { ...item, userId: u } : item) }));
+        }).catch(() => null);
+      } else {
+        // either populated user object or missing -> just insert
+        setResponsesMap((s) => ({ ...s, [parentId]: s[parentId] ? [createdForClient, ...s[parentId]] : [createdForClient] }));
+      }
+  setHasResponsesCount((s) => ({ ...s, [parentId]: (s[parentId] || 0) + 1 }));
       setReplyTextLocal((s) => ({ ...s, [parentId]: '' }));
       setReplyFormOpen((s) => ({ ...s, [parentId]: false }));
     } catch (err) {
@@ -120,7 +171,8 @@ export default function CommentariesPage() {
             </div>
           ) : (
             commentaries.map((c) => {
-              const user = c.userId || null;
+              let user = c.userId || null;
+              if (user && typeof user === 'string' && usersMap[user]) user = usersMap[user];
               const initials = user
                 ? `${(user.firstname || '').charAt(0)}${(user.lastname || '').charAt(0)}`.toUpperCase()
                 : 'U';
@@ -135,9 +187,9 @@ export default function CommentariesPage() {
                     <div className="flex-shrink-0">
                       { console.log(user)}
                       {user && user.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={`${user.firstname} ${user.lastname} avatar`}
+                            <img
+                              src={user.avatar}
+                              alt={`${displayName(user)} avatar`}
                           className="w-14 h-14 rounded-full object-cover ring-2 ring-pink-100"
                           loading="lazy"
                         />
@@ -155,7 +207,7 @@ export default function CommentariesPage() {
                             id={`comment-title-${c._id}`}
                             className="text-base md:text-lg font-semibold text-pink-900 truncate"
                           >
-                            {user ? `${user.firstname} ${user.lastname}` : 'Utilisateur supprimé'}
+                            {displayName(user)}
                           </h2>
                           <div className="flex items-center gap-3 mt-1">
                             <time
@@ -171,9 +223,9 @@ export default function CommentariesPage() {
                         <div className="flex items-center gap-2 ml-2">
                           {user && (
                             <Link
-                              href={`/pages/profile/${user._id}`}
+                              href={`/pages/profile/${user._id || user}`}
                               className="text-pink-700 text-sm hover:underline"
-                              aria-label={`Voir le profil de ${user.firstname} ${user.lastname}`}
+                              aria-label={`Voir le profil de ${displayName(user)}`}
                             >
                               Profil
                             </Link>
@@ -195,7 +247,6 @@ export default function CommentariesPage() {
                           </summary>
                         </details>
                       </div>
-                        {/* Responses area: show only if there are responses or when opened */}
                         <div className="mt-3">
                           {hasResponsesCount[c._id] > 0 && !showResponses[c._id] && (
                             <button
@@ -221,7 +272,7 @@ export default function CommentariesPage() {
                               <div className="mt-3 space-y-3">
                                 {(responsesMap[c._id] || []).map((r) => (
                                   <div key={r._id} className="bg-white/60 p-3 rounded-lg">
-                                    <div className="text-sm font-medium text-pink-700">{r.userId ? `${r.userId.firstname} ${r.userId.lastname}` : 'Utilisateur supprimé'}</div>
+                                    <div className="text-sm font-medium text-pink-700">{displayName(r.userId)}</div>
                                     <div className="text-sm text-pink-600">{r.description}</div>
                                   </div>
                                 ))}
@@ -252,11 +303,19 @@ export default function CommentariesPage() {
           )}
         </section>
       </div>
-      <AddButton onCreate={(created) => setCommentaries((prev) => [
-        // populate user lightly to match UI expectations
-        { ...created, userId: { firstname: 'Vous', lastname: '', _id: 'me' } },
-        ...prev
-      ])} />
+      <AddButton onCreate={(created) => {
+        const c = { ...created };
+          if (c.userId && typeof c.userId === 'string') {
+            // insert optimistically; try to fetch user data to replace id later
+            setCommentaries((prev) => [c, ...prev]);
+            fetchUser(c.userId).then((u) => {
+              if (!u) return;
+              setCommentaries((prev) => prev.map(item => item._id === c._id ? { ...item, userId: u } : item));
+            }).catch(() => null);
+          } else {
+            setCommentaries((prev) => [c, ...prev]);
+          }
+      }} />
     </main>
   )
 }
