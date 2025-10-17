@@ -120,7 +120,7 @@ export default function CommentariesPage() {
                         <div className="flex items-center gap-2 ml-2">
                           {user && (
                             <Link
-                              href={`/profile/${user._id}`}
+                              href={`/pages/profile/${user._id}`}
                               className="text-pink-700 text-sm hover:underline"
                               aria-label={`Voir le profil de ${user.firstname} ${user.lastname}`}
                             >
@@ -137,7 +137,7 @@ export default function CommentariesPage() {
                         </div>
                       </div>
 
-                      <div className="mt-3 text-pink-600 text-sm md:text-base leading-relaxed">
+                      {/* <div className="mt-3 text-pink-600 text-sm md:text-base leading-relaxed">
                         <details className="group">
                           <summary className="list-none cursor-pointer select-none">
                             <span className="line-clamp-3 group-open:line-clamp-none">{c.description}</span>
@@ -145,7 +145,7 @@ export default function CommentariesPage() {
                           </summary>
                           <div className="mt-2 text-pink-600">{c.description}</div>
                         </details>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </article>

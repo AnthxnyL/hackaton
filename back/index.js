@@ -17,9 +17,9 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ Erreur MongoDB:', err));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello World!');
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  console.log(`Example app listening on port ${port}`);
 })
