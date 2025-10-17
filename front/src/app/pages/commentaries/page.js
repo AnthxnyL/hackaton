@@ -215,9 +215,7 @@ export default function CommentariesPage() {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // remove from commentaries list
       setCommentaries((prev) => prev.filter((c) => c._id !== id));
-      // also remove responses and counts if present
       setResponsesMap((s) => {
         const copy = { ...s };
         delete copy[id];
