@@ -16,9 +16,9 @@ export const getCommentary = async (req, res) => {
 
 export const getCommentaries = async (req, res) => {
     try {
-        const commentaries = await Commentaries.find()
-        .populate('userId', 'firstname lastname email')
-        .sort({ createdAt: -1});
+        const commentaries = await Commentaries.find({ parentId: null })
+            .populate('userId', 'firstname lastname avatar email')
+            .sort({ createdAt: -1 });
         res.json(commentaries);
     } catch (error) {
         console.error(error);
