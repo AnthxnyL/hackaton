@@ -147,32 +147,6 @@ export default function CommentariesPage() {
                       </div>
                     </div>
                   </div>
-
-                  <footer className="mt-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs text-pink-700/90">
-                      <svg className="w-4 h-4 text-pink-700" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-                        <path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm9-3a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2A1 1 0 0012 13V7z" />
-                      </svg>
-                      <span>Publié</span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        className="text-pink-700 bg-pink-50 hover:bg-pink-100 px-3 py-1 rounded-full text-sm transition"
-                        aria-label="J'aime"
-                      >
-                        J'aime
-                      </button>
-                      <button
-                        type="button"
-                        className="text-pink-700 bg-transparent px-3 py-1 rounded-full text-sm border border-pink-100 hover:bg-pink-50 transition"
-                        aria-label="Partager"
-                      >
-                        Partager
-                      </button>
-                    </div>
-                  </footer>
                 </article>
               );
             })
