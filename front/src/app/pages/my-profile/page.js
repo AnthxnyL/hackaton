@@ -105,7 +105,14 @@ export default function MyProfilePage() {
                 <main className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Profile card */}
                     <section className="col-span-1 flex flex-col items-center md:items-start gap-4 p-6 rounded-2xl bg-white/40 backdrop-blur-md border border-pink-200/40 shadow-lg">
-                        {user.avatar ? (
+                        {/* Avatar preview: prefer edited form.avatar when editing */}
+                        {editing && form.avatar ? (
+                            <img
+                                src={form.avatar}
+                                alt={`${form.firstname || user.firstname} ${form.lastname || user.lastname}`}
+                                className="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover object-center border-4 border-white shadow-sm"
+                            />
+                        ) : user.avatar ? (
                             <img
                                 src={user.avatar}
                                 alt={`${user.firstname} ${user.lastname}`}
@@ -261,39 +268,52 @@ export default function MyProfilePage() {
                                     )}
                                 </div>
 
-                                {/* Additional editable fields: firstname/lastname/avatar */}
-                                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                                    <p className="text-xs text-pink-800/60">Prénom</p>
-                                    {!editing ? (
-                                        <p className="mt-1 text-pink-600">{user.firstname || '—'}</p>
-                                    ) : (
-                                        <input
-                                            value={form.firstname}
-                                            onChange={(e) => setForm(prev => ({ ...prev, firstname: e.target.value }))}
-                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
-                                        />
-                                    )}
-                                </div>
+                                {/* Additional editable fields: firstname/lastname/avatar - shown only when editing */}
+                                {editing && (
+                                    <>
+                                        <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                                            <p className="text-xs text-pink-800/60">Prénom</p>
+                                            <input
+                                                value={form.firstname}
+                                                onChange={(e) => setForm(prev => ({ ...prev, firstname: e.target.value }))}
+                                                className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                            />
+                                        </div>
 
-                                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
-                                    <p className="text-xs text-pink-800/60">Nom</p>
-                                    {!editing ? (
-                                        <p className="mt-1 text-pink-600">{user.lastname || '—'}</p>
-                                    ) : (
-                                        <input
-                                            value={form.lastname}
-                                            onChange={(e) => setForm(prev => ({ ...prev, lastname: e.target.value }))}
-                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
-                                        />
-                                    )}
-                                </div>
+                                        <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                                            <p className="text-xs text-pink-800/60">Nom</p>
+                                            <input
+                                                value={form.lastname}
+                                                onChange={(e) => setForm(prev => ({ ...prev, lastname: e.target.value }))}
+                                                className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                            />
+                                        </div>
+
+                                        <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40 col-span-2">
+                                            <p className="text-xs text-pink-800/60">Avatar</p>
+                                            <div className="mt-1 space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files && e.target.files[0];
+                                                            if (!file) return;
+                                                            const reader = new FileReader();
+                                                            reader.onload = () => {
+                                                                setForm(prev => ({ ...prev, avatar: reader.result }));
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }}
+                                                        className="p-1 text-pink-800/60 border rounded-md"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                            {saveError && (
-                                <div className="mt-3 text-sm text-red-600">Erreur: {saveError}</div>
-                            )}
                         </div>
-
-                        {/* User Comments */}
                         <div className="p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
                             <h3 className="text-lg font-semibold text-pink-600 mb-4">
                                 Ses commentaires ({userComments.length})
@@ -363,4 +383,3 @@ export default function MyProfilePage() {
         </div>
     );
 }
-
