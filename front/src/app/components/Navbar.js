@@ -5,15 +5,35 @@ import { usePathname } from 'next/navigation'
 import React from 'react'
 
 export default function Navbar() {
-  const pathname = usePathname() || '/'
+const pathname = usePathname() || '/'
 
-  const links = [
-    { label: 'Accueil', href: '/' },
-    { label: 'Commentaires', href: '/pages/commentaries' },
-    { label: 'Profils', href: '/pages/profile' },
-    { label: 'Connexion', href: '/pages/signin' },
-    { label: 'Inscription', href: '/pages/signup' },
-  ]
+const [isConnected, setIsConnected] = React.useState(false)
+
+React.useEffect(() => {
+    try {
+        const token = localStorage.getItem('token') || localStorage.getItem('user') || localStorage.getItem('auth')
+        setIsConnected(Boolean(token))
+    } catch (e) {
+        setIsConnected(false)
+    }
+}, [])
+
+const links = React.useMemo(() => {
+    const base = [
+        { label: 'Accueil', href: '/' },
+        { label: 'Commentaires', href: '/pages/commentaries' },
+        { label: 'Profils', href: '/pages/profile' },
+    ]
+
+    if (isConnected) {
+        base.push({ label: 'Mon profil', href: '/pages/my-profile' })
+    } else {
+        base.push({ label: 'Connexion', href: '/pages/signin' })
+        base.push({ label: 'Inscription', href: '/pages/signup' })
+    }
+
+    return base
+}, [isConnected])
 
 return (
     <nav className="relative w-full bg-gradient-to-r from-pink-600 via-pink-500 to-pink-400/90 dark:from-pink-800 dark:via-pink-700 dark:to-pink-600/90 backdrop-blur-sm border-b border-pink-300/30 dark:border-pink-900/30 shadow-lg fade-in-down">
