@@ -17,44 +17,18 @@ export default function MyProfilePage() {
 
         if (!token) throw new Error('Non connecté')
             
-        let res = await fetch(`${apiBase}/users/me`, {
+        const res = await fetch(`${apiBase}/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          return;
+        if (!res.ok) {
+          const text = await res.text().catch(() => null);
+          throw new Error(text || 'Impossible de récupérer les informations du profil');
         }
 
-        res = await fetch(`${apiBase}/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user || data);
-          return;
-        }
-
-        try {
-          const parts = token.split('.');
-          if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            if (payload && (payload._id || payload.id || payload.sub)) {
-              const id = payload._id || payload.id || payload.sub;
-              const r2 = await fetch(`${apiBase}/users/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-              if (r2.ok) {
-                const d2 = await r2.json();
-                setUser(d2);
-                return;
-              }
-            }
-          }
-        } catch (e) {
-            // ignore decode errors
-        }
-
-        throw new Error('Impossible de récupérer les informations du profil');
+        const data = await res.json();
+        setUser(data.user || data);
+        return;
       } catch (err) {
         setError(err.message || 'Erreur lors de la récupération');
       } finally {
