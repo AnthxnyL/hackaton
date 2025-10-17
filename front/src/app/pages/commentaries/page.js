@@ -119,7 +119,7 @@ export default function CommentariesPage() {
                         <div className="flex items-center gap-2 ml-2">
                           {user && (
                             <Link
-                              href={`/profile/${user._id}`}
+                              href={`/pages/profile/${user._id}`}
                               className="text-pink-700 text-sm hover:underline"
                               aria-label={`Voir le profil de ${user.firstname} ${user.lastname}`}
                             >
