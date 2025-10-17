@@ -14,7 +14,7 @@ export default function ProfileList() {
       setLoading(true)
       setError(null)
       try {
-        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app/').replace(/\/+$/, '');
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         const res = await fetch(`${apiBase}/users`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,

@@ -21,7 +21,7 @@ export default function SignUpPage() {
     };
 
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app/').replace(/\/+$/, '');
       const res = await fetch(`${apiBase}/users`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },

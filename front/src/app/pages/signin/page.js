@@ -14,7 +14,7 @@ export default function SignInPage() {
       password: formObj.password,
     };
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app/').replace(/\/+$/, '');
       const res = await fetch(`${apiBase}/auth/signin`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
