@@ -6,6 +6,7 @@ import AddButton from '../../components/addButton';
 
 export default function CommentariesPage() {
   const [commentaries, setCommentaries] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [replyText, setReplyText] = useState({});
@@ -48,6 +49,22 @@ export default function CommentariesPage() {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) return setCurrentUser(null);
+      const res = await fetch(`${apiBase}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return setCurrentUser(null);
+      const u = await res.json();
+      setCurrentUser(u);
+      console.log('Current user:', u);
+    } catch (err) {
+      // ignore
+      setCurrentUser(null);
+    }
+  };
+
   useEffect(() => {
     const fetchCommentaries = async () => {
       setLoading(true);
@@ -78,6 +95,8 @@ export default function CommentariesPage() {
     };
 
     fetchCommentaries();
+    // also fetch current user (if any)
+    fetchCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -142,6 +161,36 @@ export default function CommentariesPage() {
     }
   };
 
+  const deleteComment = async (id) => {
+    if (!id) return;
+    if (!confirm('Supprimer ce commentaire ? Cette action est irréversible.')) return;
+    try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${apiBase}/commentaries/${id}`, {
+        method: 'DELETE',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // remove from commentaries list
+      setCommentaries((prev) => prev.filter((c) => c._id !== id));
+      // also remove responses and counts if present
+      setResponsesMap((s) => {
+        const copy = { ...s };
+        delete copy[id];
+        return copy;
+      });
+      setHasResponsesCount((s) => {
+        const copy = { ...s };
+        delete copy[id];
+        return copy;
+      });
+    } catch (err) {
+      console.error(err);
+      alert(`Erreur lors de la suppression: ${err.message || err}`);
+    }
+  };
+
   if (loading)
     return (
       <div className="min-h-screen items-center justify-center bg-pink-100 p-8 w-full">
@@ -185,7 +234,6 @@ export default function CommentariesPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
-                      { console.log(user)}
                       {user && user.avatar ? (
                             <img
                               src={user.avatar}
@@ -230,13 +278,18 @@ export default function CommentariesPage() {
                               Profil
                             </Link>
                           )}
-                          {/* <button
-                            type="button"
-                            className="text-pink-700 text-sm hover:underline"
-                            aria-label="Répondre au commentaire"
-                          >
-                            Répondre
-                          </button> */}
+
+                          {/* Admin-only delete button */}
+                          {currentUser && currentUser.role === 'admin' && (
+                            <button
+                              type="button"
+                              className="text-sm text-red-600 hover:underline ml-2"
+                              onClick={() => deleteComment(c._id)}
+                              aria-label={`Supprimer le commentaire de ${displayName(user)}`}
+                            >
+                              Supprimer
+                            </button>
+                          )}
                         </div>
                       </div>
 
