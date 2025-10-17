@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/', createUser);
 router.get('/:_id',authOpaque, getUser);
-router.get('/',authOpaque, requireRole(['admin']), getUsers);
+router.get('/', authOpaque, getUsers);
 router.put('/:_id',authOpaque, requireOwnershipOrAdmin(), updateUser);
 router.delete('/:_id',authOpaque,  requireRole(['admin']), deleteUser);
 
