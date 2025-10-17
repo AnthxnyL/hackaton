@@ -25,7 +25,6 @@ export default function CommentariesPage() {
 
   const displayName = (user) => {
     if (!user) return 'Utilisateur supprimé';
-    // if user is an id string, try to resolve from cache
     if (typeof user === 'string') {
       const cached = usersMap[user];
       if (cached) return `${(cached.firstname || '').trim()} ${(cached.lastname || '').trim()}`.trim() || 'Utilisateur';
@@ -122,11 +121,9 @@ export default function CommentariesPage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setCommentaries(data);
-        // resolve user ids for comments that only contain an id
         data.forEach((c) => {
           const uid = c.userId;
           if (uid && typeof uid === 'string' && !usersMap[uid]) {
-            // fetch and cache, don't await
             fetchUser(uid).catch(() => null);
           }
         });
