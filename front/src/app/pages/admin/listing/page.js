@@ -55,6 +55,13 @@ export default function Listing() {
                 const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
+                // Fetch users (for list)
+                const usersP = fetch(`${apiBase}/users`, { headers }).then(async (r) => {
+                    if (!r.ok) throw new Error(`users: HTTP ${r.status}`);
+                    const data = await r.json();
+                    return Array.isArray(data) ? data : (data.users || []);
+                }).catch(() => []);
+
                 // Fetch admin numbers (may be protected; fall back if not available)
                 const totalP = fetch(`${apiBase}/admin/numbers`, { headers }).then(async (r) => {
                     if (!r.ok) throw new Error(`admin/numbers: HTTP ${r.status}`);
