@@ -10,6 +10,10 @@ export default function MyProfilePage() {
     const [error, setError] = useState(null);
     const [userComments, setUserComments] = useState([]);
     const [commentsLoading, setCommentsLoading] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [form, setForm] = useState({});
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState(null);
 
     const formatDate = (iso) => {
         try {
@@ -123,11 +127,11 @@ export default function MyProfilePage() {
                             <h4 className="text-sm font-semibold text-pink-600 mb-2">Statistiques</h4>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-pink-800/60">Commentaires :</span>
+                                    <span className="text-pink-600/70">Commentaires :</span>
                                     <span className="font-medium text-pink-600">{userComments.length}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-pink-800/60">Membre depuis :</span>
+                                    <span className="text-pink-600/70">Membre depuis :</span>
                                     <span className="font-medium text-pink-600">
                                         {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                                     </span>
@@ -137,6 +141,74 @@ export default function MyProfilePage() {
                     </section>
 
                     <section className="col-span-2 space-y-6">
+                        <div className="flex justify-end">
+                            {!editing ? (
+                                <button
+                                    onClick={() => { setEditing(true); setForm({
+                                        firstname: user.firstname || '',
+                                        lastname: user.lastname || '',
+                                        address: user.address || '',
+                                        description: user.description || '',
+                                        phoneNumber: user.phoneNumber || '',
+                                        avatar: user.avatar || '',
+                                    }); setSaveError(null); }}
+                                    className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-60"
+                                >
+                                    Modifier
+                                </button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            setSaving(true);
+                                            setSaveError(null);
+                                            try {
+                                                const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '');
+                                                const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                                                if (!token) throw new Error('Not authenticated');
+
+                                                const payload = { ...form };
+
+                                                const res = await fetch(`${apiBase}/users/${user._id || user.id}`, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${token}`,
+                                                    },
+                                                    body: JSON.stringify(payload),
+                                                });
+
+                                                if (!res.ok) {
+                                                    const text = await res.text().catch(() => null);
+                                                    throw new Error(text || `Erreur ${res.status}`);
+                                                }
+
+                                                const updated = await res.json();
+                                                setUser(updated);
+                                                setEditing(false);
+                                            } catch (err) {
+                                                console.error('Save error', err);
+                                                setSaveError(err.message || 'Erreur lors de la sauvegarde');
+                                            } finally {
+                                                setSaving(false);
+                                            }
+                                        }}
+                                        disabled={saving}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-60"
+                                    >
+                                        {saving ? 'Enregistrement...' : 'Enregistrer'}
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setEditing(false); setForm({}); setSaveError(null); }}
+                                        disabled={saving}
+                                        className="px-4 py-2 bg-gray-200 text-pink-600 rounded-md hover:bg-gray-300 disabled:opacity-60"
+                                    >
+                                        Annuler
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         {/* User info */}
                         <div className="p-6 rounded-2xl bg-white/30 backdrop-blur-md border border-pink-200/40 shadow-lg">
                             <h3 className="text-lg font-semibold text-pink-600 mb-4">Informations personnelles</h3>
@@ -144,24 +216,81 @@ export default function MyProfilePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
                                     <p className="text-xs text-pink-800/60">Description</p>
-                                    <p className="mt-1 text-pink-600">{user.description || '—'}</p>
+                                    {!editing ? (
+                                        <p className="mt-1 text-pink-600">{user.description || '—'}</p>
+                                    ) : (
+                                        <textarea
+                                            value={form.description}
+                                            onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                            rows={3}
+                                        />
+                                    )}
                                 </div>
 
                                 <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
                                     <p className="text-xs text-pink-800/60">Adresse</p>
-                                    <p className="mt-1 text-pink-600">{user.address || '—'}</p>
+                                    {!editing ? (
+                                        <p className="mt-1 text-pink-600">{user.address || '—'}</p>
+                                    ) : (
+                                        <input
+                                            value={form.address}
+                                            onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))}
+                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                        />
+                                    )}
                                 </div>
 
                                 <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
                                     <p className="text-xs text-pink-800/60">Email</p>
-                                    <p className="mt-1 text-pink-600 break-all">{user.email}</p>
+                                    <p className="mt-1 text-pink-600 break-all">
+                                        <input value={user.email} disabled className="w-full p-2 bg-gray-100 rounded-md" />
+                                    </p>
                                 </div>
 
                                 <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
                                     <p className="text-xs text-pink-800/60">Téléphone</p>
-                                    <p className="mt-1 text-pink-600">{user.phoneNumber || '—'}</p>
+                                    {!editing ? (
+                                        <p className="mt-1 text-pink-600">{user.phoneNumber || '—'}</p>
+                                    ) : (
+                                        <input
+                                            value={form.phoneNumber}
+                                            onChange={(e) => setForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Additional editable fields: firstname/lastname/avatar */}
+                                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                                    <p className="text-xs text-pink-800/60">Prénom</p>
+                                    {!editing ? (
+                                        <p className="mt-1 text-pink-600">{user.firstname || '—'}</p>
+                                    ) : (
+                                        <input
+                                            value={form.firstname}
+                                            onChange={(e) => setForm(prev => ({ ...prev, firstname: e.target.value }))}
+                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                        />
+                                    )}
+                                </div>
+
+                                <div className="p-4 rounded-lg bg-white/60 border border-pink-200/40">
+                                    <p className="text-xs text-pink-800/60">Nom</p>
+                                    {!editing ? (
+                                        <p className="mt-1 text-pink-600">{user.lastname || '—'}</p>
+                                    ) : (
+                                        <input
+                                            value={form.lastname}
+                                            onChange={(e) => setForm(prev => ({ ...prev, lastname: e.target.value }))}
+                                            className="mt-1 text-pink-800/60 w-full p-2 border rounded-md"
+                                        />
+                                    )}
                                 </div>
                             </div>
+                            {saveError && (
+                                <div className="mt-3 text-sm text-red-600">Erreur: {saveError}</div>
+                            )}
                         </div>
 
                         {/* User Comments */}
