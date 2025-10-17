@@ -2,13 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import AddButton from '../../components/addButton';
 
 export default function CommentariesPage() {
   const [commentaries, setCommentaries] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userComments, setUserComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [replyText, setReplyText] = useState({});
   const [showResponses, setShowResponses] = useState({});
   const [responsesMap, setResponsesMap] = useState({});
@@ -49,19 +53,58 @@ export default function CommentariesPage() {
     }
   };
 
-  const fetchCurrentUser = async () => {
+  const fetchMe = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$/, '')
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'https://hackaton-back-delta.vercel.app').replace(/\/+$|\/+$/, '');
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (!token) return setCurrentUser(null);
-      const res = await fetch(`${apiBase}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) return setCurrentUser(null);
-      const u = await res.json();
-      setCurrentUser(u);
-      console.log('Current user:', u);
+
+      if (!token) {
+        // If not authenticated redirect to signin
+        router.push('/signin');
+        return;
+      }
+
+      const res = await fetch(`${apiBase}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || 'Impossible de récupérer les informations du profil');
+      }
+
+      const data = await res.json();
+      const newUser = data.user || data;
+      setCurrentUser(newUser);
+
+      // fetch all comments and filter by this user
+      setCommentsLoading(true);
+      try {
+        const cRes = await fetch(`${apiBase}/commentaries`);
+        if (!cRes.ok) throw new Error(`HTTP ${cRes.status}`);
+        const allComments = await cRes.json();
+        const filtered = (Array.isArray(allComments) ? allComments : []).filter(c => {
+          if (!c.userId) return false;
+          const uid = newUser._id || newUser.id;
+          if (typeof c.userId === 'string') return c.userId === uid;
+          return (c.userId._id === uid) || (c.userId === uid);
+        });
+        const sorted = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setUserComments(sorted);
+      } catch (err) {
+        console.error('Erreur récupération commentaires:', err);
+        setUserComments([]);
+      } finally {
+        setCommentsLoading(false);
+      }
+
+      return;
     } catch (err) {
-      // ignore
-      setCurrentUser(null);
+      setError(err.message || 'Erreur lors de la récupération');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,7 +139,7 @@ export default function CommentariesPage() {
 
     fetchCommentaries();
     // also fetch current user (if any)
-    fetchCurrentUser();
+    fetchMe();
   }, []);
 
   useEffect(() => {
